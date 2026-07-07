@@ -26,7 +26,9 @@ export function PhoneFrame({
       className={cn(
         // titanium outer rail — thin metallic ring. Height derives from the
         // screen's aspect ratio (below) so the live content fits edge-to-edge.
-        "relative w-full max-w-[300px] shrink-0 rounded-[3rem] p-[2px]",
+        // Phones read small on wide desktop viewports, so nudge the cap up from
+        // md upward; the sub-md value stays 300px so mobile layout is untouched.
+        "relative w-full max-w-[300px] md:max-w-[340px] shrink-0 rounded-[3rem] p-[2px]",
         "bg-[linear-gradient(150deg,#4a4a46_0%,#111_18%,#0a0a0a_50%,#111_82%,#3a3a36_100%)]",
         "shadow-[0_50px_90px_-40px_rgba(0,0,0,0.95),0_0_0_1px_rgba(0,0,0,0.6)]",
         className

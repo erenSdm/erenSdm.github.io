@@ -85,8 +85,9 @@ export function MobileShowcase() {
               ))}
             </div>
 
-            {/* phone stack */}
-            <div className="relative order-1 h-[52vh] md:order-2 md:h-[80vh]">
+            {/* phone stack — extra vertical room on desktop so the enlarged
+                phone never clips top/bottom inside the pinned viewport */}
+            <div className="relative order-1 h-[52vh] md:order-2 md:h-[86vh]">
               {MOBILE_DEMOS.map((demo) => (
                 <div
                   key={demo.slug}
