@@ -14,7 +14,7 @@ export const automation: SystemDef = {
   copy: {
     code: "S-04",
     kicker: { en: "Automation & product ops", tr: "Otomasyon ve ürün operasyonu" },
-    title: { en: "Workflows that run the back office", tr: "Arka ofisi yöneten iş akışları" },
+    title: { en: "Product & inventory tracking systems", tr: "Ürün ve stok takip sistemleri" },
     body: {
       en: "One product database feeds the website, Trendyol and Shopify at the same time. A new order reserves stock, issues the e-invoice, prints the shipping label and tells the customer, all without anyone touching it. Unpaid orders get a reminder, and the morning report is ready before the team logs in.",
       tr: "Tek bir ürün veritabanı web sitesini, Trendyol'u ve Shopify'ı aynı anda besliyor. Yeni gelen sipariş stoğu ayırıyor, e-faturayı kesiyor, kargo etiketini basıyor ve müşteriye haber veriyor. Bunların hiçbiri için kimsenin elini sürmesi gerekmiyor. Ödenmemiş siparişlere hatırlatma gidiyor, sabah raporu da ekip giriş yapmadan hazır oluyor.",

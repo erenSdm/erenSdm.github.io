@@ -13,7 +13,7 @@ export const integrations: SystemDef = {
   copy: {
     code: "S-03",
     kicker: { en: "Integrations", tr: "Entegrasyonlar" },
-    title: { en: "One hub for every channel", tr: "Tüm kanallar tek merkezde" },
+    title: { en: "Messaging & CRM integrations", tr: "Mesajlaşma ve CRM entegrasyonları" },
     body: {
       en: "WhatsApp, Instagram DMs and Meta lead forms land in one place. An AI agent reads each message, checks the order in your store, writes the lead into your CRM, replies in the same channel and pings the team when a person needs to step in. Nobody copies data between tabs anymore.",
       tr: "WhatsApp, Instagram DM ve Meta form başvuruları tek bir yere düşüyor. Bir AI ajanı her mesajı okuyor, siparişi mağazanızdan kontrol ediyor, müşteri adayını CRM'e yazıyor, aynı kanaldan cevap veriyor ve bir insanın devreye girmesi gerektiğinde ekibe haber veriyor. Kimse sekmeler arasında veri kopyalamıyor.",

@@ -18,7 +18,7 @@ export const richcasebot: SystemDef = {
   copy: {
     code: "S-01",
     kicker: { en: "Real-time data & execution", tr: "Gerçek zamanlı veri ve işlem" },
-    title: { en: "RichcaseBot trading engine", tr: "RichcaseBot işlem motoru" },
+    title: { en: "Crypto analysis & trading systems", tr: "Kripto analiz ve trading sistemleri" },
     body: {
       en: "Behind RichcaseBot sits a pipeline that never sleeps. It reads the live Binance market stream, turns raw ticks into candles, runs each user's strategy, checks every order against risk limits and places it with a key that can trade but can never withdraw. Every fill reaches the user on Telegram within seconds.",
       tr: "RichcaseBot'un arkasında hiç durmayan bir veri hattı çalışıyor. Binance'in canlı piyasa akışını okuyor, ham fiyatları mumlara çeviriyor, her kullanıcının stratejisini çalıştırıyor, her emri risk limitlerinden geçiriyor ve emri yalnızca işlem yapabilen, para çekemeyen bir anahtarla gönderiyor. Gerçekleşen her işlem saniyeler içinde kullanıcıya Telegram'dan ulaşıyor.",

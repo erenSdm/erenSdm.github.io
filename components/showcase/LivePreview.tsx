@@ -18,6 +18,8 @@ interface LivePreviewProps {
   accent?: string;
   /** skip the idle prefetch (use for long lists so we don't warm 15 routes at once) */
   warm?: boolean;
+  /** static screenshot painted instantly while the live iframe boots */
+  poster?: string;
 }
 
 /**
@@ -44,6 +46,7 @@ export function LivePreview({
   rootMargin = "1200px 1200px",
   accent,
   warm = true,
+  poster,
 }: LivePreviewProps) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
@@ -135,13 +138,24 @@ export function LivePreview({
             : undefined
         }
       >
-        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ash">
-          <span
-            className="h-1.5 w-1.5 animate-pulse rounded-full"
-            style={{ backgroundColor: accent ?? "currentColor" }}
+        {poster ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={poster}
+            alt=""
+            decoding="async"
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover object-top"
           />
-          {title}
-        </span>
+        ) : (
+          <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ash">
+            <span
+              className="h-1.5 w-1.5 animate-pulse rounded-full"
+              style={{ backgroundColor: accent ?? "currentColor" }}
+            />
+            {title}
+          </span>
+        )}
       </div>
       {scale > 0 && visible && (
         <iframe

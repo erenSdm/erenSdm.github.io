@@ -1,20 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowDown } from "lucide-react";
 import { useT } from "@/lib/i18n/context";
-import { ALL_DEMOS } from "@/lib/demos";
-import { DISCIPLINE_ORDER } from "@/lib/disciplines";
 import { Kicker } from "@/components/primitives/SplitButton";
+import { scrollToId, cn } from "@/lib/utils";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-const VALUES: Record<string, { value: number; suffix?: string; pad?: number }> = {
-  builds: { value: ALL_DEMOS.length, suffix: "+", pad: 2 },
-  disciplines: { value: DISCIPLINE_ORDER.length, pad: 2 },
-  fps: { value: 60, suffix: " FPS" },
-  templates: { value: 0, pad: 2 },
-};
 
 /** Renders "plain |term| plain" with the gertix-style piped highlights. */
 export function Piped({ text }: { text: string }) {
@@ -34,36 +26,9 @@ export function Piped({ text }: { text: string }) {
   );
 }
 
-function Counter({ value, suffix = "", pad = 0 }: { value: number; suffix?: string; pad?: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-15% 0px" });
-  const reduce = useReducedMotion();
-  const [n, setN] = useState(0);
-
-  useEffect(() => {
-    if (!inView || reduce || value === 0) return;
-    let raf = 0;
-    const start = performance.now();
-    const dur = 1400;
-    const tick = (now: number) => {
-      const p = Math.min((now - start) / dur, 1);
-      setN(Math.round(value * (1 - Math.pow(1 - p, 4))));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, reduce, value]);
-
-  return (
-    <span ref={ref} className="tabular">
-      {String(reduce || value === 0 ? value : n).padStart(pad, "0")}
-      {suffix && <span className="ml-[0.12em] text-[0.45em] align-top">{suffix.trim()}</span>}
-    </span>
-  );
-}
-
 export function Intro() {
   const t = useT();
+  const reduce = useReducedMotion();
 
   return (
     <section
@@ -97,27 +62,52 @@ export function Intro() {
           </motion.div>
         </div>
 
-        <dl className="mt-20 grid grid-cols-2 border-t border-dashed border-carbon/30 md:mt-28 lg:grid-cols-4">
-          {t.intro.stats.map((s, i) => {
-            const v = VALUES[s.key];
-            return (
-              <div
-                key={s.key}
-                className={
-                  "flex flex-col gap-3 border-b border-dashed border-carbon/30 py-8 pr-4 md:py-10 lg:border-b-0 " +
-                  (i % 2 === 1 ? "pl-4 border-l lg:pl-6 " : "lg:pl-6 ") +
-                  (i === 2 ? "lg:border-l " : "") +
-                  (i === 0 ? "lg:pl-0" : "")
-                }
+        {/* the three layers — each one jumps to its section further down */}
+        <ol className="mt-20 grid border-t border-dashed border-carbon/30 md:mt-28 lg:grid-cols-3">
+          {t.intro.parts.map((p, i) => (
+            <motion.li
+              key={p.target}
+              initial={reduce ? false : { opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10% 0px" }}
+              transition={{ duration: 0.8, ease, delay: i * 0.08 }}
+              className={cn(
+                "border-b border-dashed border-carbon/30 lg:border-b-0",
+                i > 0 ? "lg:border-l" : "lg:[&>button]:pl-0"
+              )}
+            >
+              <button
+                type="button"
+                onClick={() => scrollToId(p.target, -56)}
+                className="group flex h-full w-full flex-col py-10 text-left outline-none focus-visible:ring-2 focus-visible:ring-carbon lg:px-8 lg:py-12"
               >
-                <dt className="ui order-2 text-carbon/60">{s.label}</dt>
-                <dd className="font-wide order-1 text-[clamp(2.2rem,5vw,4.5rem)] leading-none">
-                  {v && <Counter value={v.value} suffix={v.suffix} pad={v.pad} />}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="font-plex tabular text-xl md:text-2xl">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="ui text-carbon/55">{p.sub}</span>
+                </div>
+                <h3 className="font-wide text-display-md mt-8 text-balance">{p.title}</h3>
+                <p className="font-plex mt-6 max-w-[46ch] text-[15px] leading-[1.7] text-carbon/75 text-pretty">
+                  {p.body}
+                </p>
+                <ul className="mt-8 flex flex-wrap gap-1.5">
+                  {p.tags.map((tag) => (
+                    <li key={tag} lang="en" className="ui rounded-full border border-carbon/55 px-3 py-1.5 text-[11px]">
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+                <span className="ui mt-auto flex items-center gap-2 pt-10">
+                  <span className="flex h-9 w-9 items-center justify-center bg-carbon text-paper transition-transform duration-300 group-hover:translate-y-0.5">
+                    <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+                  </span>
+                  <span className="border-b border-transparent transition-colors group-hover:border-carbon">{p.cta}</span>
+                </span>
+              </button>
+            </motion.li>
+          ))}
+        </ol>
       </div>
     </section>
   );

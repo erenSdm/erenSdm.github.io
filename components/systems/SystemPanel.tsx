@@ -28,11 +28,14 @@ export function SystemPanel({
   index,
   light,
   flagship,
+  compact,
 }: {
   sys: SystemDef;
   index: number;
   light: boolean;
   flagship?: boolean;
+  /** one-screen layout for the horizontal desktop track */
+  compact?: boolean;
 }) {
   const { locale } = useLanguage();
   const reduce = useReducedMotion();
@@ -50,18 +53,20 @@ export function SystemPanel({
     <motion.article
       id={`sys-${sys.slug}`}
       aria-labelledby={`sys-${sys.slug}-title`}
-      initial={reduce ? false : { opacity: 0, y: 48 }}
+      initial={reduce || compact ? false : { opacity: 0, y: 48 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-10% 0px" }}
       transition={{ duration: 0.9, ease }}
       className={cn(
-        "scroll-mt-20 border border-dashed px-4 py-8 md:px-8 md:py-10 lg:px-10 lg:py-12",
+        compact
+          ? "flex h-full flex-col overflow-hidden border border-dashed px-8 py-7"
+          : "scroll-mt-20 border border-dashed px-4 py-8 md:px-8 md:py-10 lg:px-10 lg:py-12",
         light ? "border-carbon/25 bg-mist text-carbon" : "border-paper/20 bg-graphite text-paper"
       )}
     >
       {/* header */}
-      <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
-        <div className="lg:col-span-7">
+      <div className={cn("grid lg:grid-cols-12 lg:gap-10", compact ? "gap-6" : "gap-8")}>
+        <div className={compact ? "lg:col-span-5" : "lg:col-span-7"}>
           <div className="ui flex flex-wrap items-center gap-3 opacity-70">
             <span className="tabular">{c.code}</span>
             <span aria-hidden className="h-px w-8 bg-current opacity-40" />
@@ -70,16 +75,16 @@ export function SystemPanel({
               <span className="ui bg-volt px-2 py-1 text-[10px] text-carbon">{tx(UI.flagship, locale)}</span>
             )}
           </div>
-          <div className="mt-6 grid grid-cols-[3.25rem_1fr] items-baseline gap-x-3 md:grid-cols-[5rem_1fr]">
+          <div className={cn("grid grid-cols-[3.25rem_1fr] items-baseline gap-x-3 md:grid-cols-[5rem_1fr]", compact ? "mt-4" : "mt-6")}>
             <span className="font-plex tabular text-xl md:text-2xl">{String(index + 1).padStart(2, "0")}</span>
             <h3
               id={`sys-${sys.slug}-title`}
-              className={cn("font-wide text-balance", flagship ? "text-display-lg" : "text-display-md")}
+              className={cn("font-wide text-balance", compact ? "text-[clamp(1.75rem,2.5vw,2.75rem)] leading-[1.02]" : flagship ? "text-display-lg" : "text-display-md")}
             >
               {tx(c.title, locale)}
             </h3>
           </div>
-          <ul className="ml-[calc(3.25rem+0.75rem)] mt-6 flex flex-wrap gap-1.5 md:ml-[calc(5rem+0.75rem)]">
+          <ul className={cn("ml-[calc(3.25rem+0.75rem)] flex flex-wrap gap-1.5 md:ml-[calc(5rem+0.75rem)]", compact ? "mt-4" : "mt-6")}>
             {c.tags.map((t) => (
               <li
                 key={t}
@@ -92,9 +97,9 @@ export function SystemPanel({
           </ul>
         </div>
 
-        <div className="flex flex-col justify-end lg:col-span-5">
-          <p className={cn("font-plex max-w-[56ch] text-[15px] leading-[1.7] text-pretty", muted)}>{tx(c.body, locale)}</p>
-          <dl className={cn("mt-8 border-t border-dashed", line)}>
+        <div className={cn("flex flex-col justify-end", compact ? "lg:col-span-7" : "lg:col-span-5")}>
+          <p className={cn("font-plex max-w-[56ch] text-[15px] leading-[1.7] text-pretty", muted, compact && "line-clamp-4 text-[14px]")}>{tx(c.body, locale)}</p>
+          <dl className={cn("mt-8 border-t border-dashed", line, compact && "hidden")}>
             {c.facts.map((f) => (
               <div key={tx(f.k, "en")} className={cn("grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-4 border-b border-dashed py-3", line)}>
                 <dt className="ui opacity-55">{tx(f.k, locale)}</dt>
@@ -102,11 +107,18 @@ export function SystemPanel({
               </div>
             ))}
           </dl>
+          {compact && c.cta && (
+            <div className="mt-5">
+              <SplitButton tone={light ? "dark" : "light"} href={c.cta.href}>
+                {tx(c.cta.label, locale)}
+              </SplitButton>
+            </div>
+          )}
         </div>
       </div>
 
       {/* scenario bar */}
-      <div className="mt-10 flex flex-wrap items-center gap-2 md:mt-14">
+      <div className={cn("flex flex-wrap items-center gap-2", compact ? "mt-6" : "mt-10 md:mt-14")}>
         <span className="ui mr-2 opacity-55">{tx(UI.scenarios, locale)}</span>
         {sys.stories.map((sc, i) => {
           const on = i === s.sIdx;
@@ -170,12 +182,27 @@ export function SystemPanel({
       </div>
 
       {/* stage: live schematic + trace */}
-      <div ref={stageRef} className="frame-dashed mt-4 grid gap-1.5 p-1.5 md:p-2 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div
+        ref={stageRef}
+        className={cn(
+          "frame-dashed mt-4 grid gap-1.5 p-1.5 md:p-2",
+          compact ? "min-h-0 flex-1 grid-cols-[minmax(0,1fr)_300px] grid-rows-[minmax(0,1fr)]" : "xl:grid-cols-[minmax(0,1fr)_360px]"
+        )}
+      >
         <div className="relative flex flex-col bg-carbon text-paper">
           <Metrics items={sys.metrics} live={live} />
-          <div className="flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
-            {/* inline: the global `* { min-width: 0 }` reset outranks layered utilities */}
-            <div className="p-3 md:p-5" style={{ minWidth: 720 }}>
+          <div
+            className={cn(
+              "flex-1",
+              compact ? "flex min-h-0 items-center justify-center p-3" : "overflow-x-auto overscroll-x-contain [scrollbar-width:thin]"
+            )}
+          >
+            {/* inline: the global `* { min-width: 0 }` reset outranks layered utilities.
+                compact: the 1000:520 stage takes whatever height is left, capped by the width */}
+            <div
+              className={compact ? "flex h-full max-w-full items-center" : "p-3 md:p-5"}
+              style={compact ? { aspectRatio: "1000 / 520" } : { minWidth: 720 }}
+            >
               <FlowStage sys={sys} story={s.story} step={s.step} run={s.run} live={live} />
             </div>
           </div>
@@ -184,10 +211,17 @@ export function SystemPanel({
             <span className="md:hidden">{tx(UI.scroll, locale)} →</span>
           </div>
         </div>
-        <Inspector story={s.story} step={s.step} stations={stations} live={live} />
+        {compact ? (
+          /* locked to the panel height; the waterfall tightens so long stories still fit */
+          <div className="min-h-0 overflow-hidden [&_ol]:gap-[3px] [&_ol]:py-3 [&>div]:min-h-0">
+            <Inspector story={s.story} step={s.step} stations={stations} live={live} />
+          </div>
+        ) : (
+          <Inspector story={s.story} step={s.step} stations={stations} live={live} />
+        )}
       </div>
 
-      {c.cta && (
+      {c.cta && !compact && (
         <div className="mt-8">
           <SplitButton tone={light ? "dark" : "light"} href={c.cta.href}>
             {tx(c.cta.label, locale)}

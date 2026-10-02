@@ -1,24 +1,14 @@
-import { ALL_DEMOS, type Demo } from "@/lib/demos";
+import { WEB_DEMOS, type Demo } from "@/lib/demos";
 
 /**
- * The five studio disciplines the homepage is organised around. Every demo in
- * the manifest is sorted into one of them, so new entries in lib/demos.ts show
- * up under the right service card without touching this file.
+ * The three kinds of website the "What we build" section is organised around.
+ * Every web demo in the manifest is sorted into one of them, so new entries in
+ * lib/demos.ts show up under the right card without touching this file.
+ * Mobile apps and backend systems have their own homepage sections.
  */
-export type DisciplineKey =
-  | "platforms"
-  | "commerce"
-  | "brand"
-  | "mobile"
-  | "systems";
+export type DisciplineKey = "platforms" | "commerce" | "brand";
 
-export const DISCIPLINE_ORDER: DisciplineKey[] = [
-  "platforms",
-  "commerce",
-  "brand",
-  "mobile",
-  "systems",
-];
+export const DISCIPLINE_ORDER: DisciplineKey[] = ["platforms", "commerce", "brand"];
 
 /* explicit placement for known builds; everything else is inferred */
 const PINNED: Record<string, DisciplineKey> = {
@@ -38,7 +28,6 @@ const PINNED: Record<string, DisciplineKey> = {
 export function disciplineOf(demo: Demo): DisciplineKey {
   const pinned = PINNED[demo.slug];
   if (pinned) return pinned;
-  if (demo.kind === "mobile") return "mobile";
   const hay = [...demo.stack, demo.domain.en].join(" ").toLowerCase();
   if (/commerce|shop|store|retail|catalog/.test(hay)) return "commerce";
   if (/dashboard|saas|panel|platform|console|admin|crm/.test(hay))
@@ -46,8 +35,7 @@ export function disciplineOf(demo: Demo): DisciplineKey {
   return "brand";
 }
 
-/** demos grouped per discipline; "systems" draws from the whole manifest */
+/** web demos grouped per discipline */
 export function demosFor(key: DisciplineKey): Demo[] {
-  if (key === "systems") return ALL_DEMOS;
-  return ALL_DEMOS.filter((d) => disciplineOf(d) === key);
+  return WEB_DEMOS.filter((d) => disciplineOf(d) === key);
 }

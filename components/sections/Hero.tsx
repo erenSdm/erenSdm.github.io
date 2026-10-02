@@ -12,6 +12,10 @@ const SEPARATORS = ["×", "→", "*"];
 export function Hero() {
   const t = useT();
   const reduce = useReducedMotion();
+  // running letter index per title line, so the glow sweeps across all lines in one pass
+  const offsets = t.hero.title.map((_, i) =>
+    t.hero.title.slice(0, i).reduce((n, l) => n + l.length, 0),
+  );
   const enter = (delay: number) =>
     reduce
       ? {}
@@ -38,16 +42,32 @@ export function Hero() {
           <Kicker className="mb-8 text-paper md:mb-10">{t.hero.kicker}</Kicker>
         </motion.div>
 
-        <h1 className="font-wide text-[clamp(1.9rem,calc(4.9vw_+_0.4rem),5.6rem)] leading-[1.02]">
+        <h1
+          aria-label={t.hero.title.join(" ")}
+          className="relative font-wide text-[clamp(1.55rem,calc(3.6vw_+_0.3rem),4.2rem)]"
+          style={{
+            fontWeight: 300,
+            letterSpacing: "0.06em",
+            lineHeight: 1.14,
+          }}
+        >
           {t.hero.title.map((line, i) => (
-            <span key={i} className="block overflow-hidden pb-[0.04em]">
+            <span key={i} aria-hidden className="block overflow-hidden pb-[0.04em]">
               <motion.span
                 className="block"
                 initial={reduce ? false : { y: "105%" }}
                 animate={{ y: 0 }}
                 transition={{ duration: 1, ease, delay: 0.1 + i * 0.09 }}
               >
-                {line}
+                {Array.from(line).map((ch, j) => (
+                  <span
+                    key={j}
+                    className="glow-letter"
+                    style={{ ["--d" as string]: `${0.5 + (offsets[i] + j) * 0.045}s` }}
+                  >
+                    {ch}
+                  </span>
+                ))}
               </motion.span>
             </span>
           ))}

@@ -1,0 +1,29 @@
+# Venn
+
+> Venn, grup ve etkinlik odaklı, sakin bir sosyal bağlantı uygulamasıdır. Ortak ilgi alanlarına göre insanları anlamlı gruplarda buluşturur ve gerçek hayatta buluşmayı kolaylaştırır. Bir dating uygulaması değildir; flört yalnızca isteyene özel, gizli bir katmandır.
+
+## Venn nedir
+- Arkadaşlık ve gerçek hayattaki etkinlikler önce gelir; dating ana amaç değildir.
+- Temel ilke: Algoritma önerir, kullanıcı karar verir. Kimse bir gruba zorlanmaz.
+- Nicelik değil nitelik: sana uygun birkaç doğru bağ, yanlış çok bağdan iyidir.
+- Konum gizliliği kullanıcının kontrolündedir; harita tamamen kapatılabilir.
+
+## Öne çıkanlar
+- Gruplar: ilgi, etkinlik, vibe ve aktivite temelli; 10 ana kategori.
+- Vent'ler: haritada gerçek etkinlikler; bir dokunuşla katılım.
+- Rozetler: kullanımla kazanılan başarımlar. İlk 1000 üye Kurucu/Erken Üye rozeti alır.
+- Gizli flört katmanı: ana menüde yoktur, dilenildiğinde tamamen kapatılır.
+
+## Güven ve güvenlik
+- Reklam yok, takip SDK'sı yok, veri satışı yok.
+- Moderasyon insan denetimlidir: kullanıcı şikayetleri ve ekip incelemesi (hedef 48 saat). Yapay zekâ moderasyon kullanılmaz.
+- 18 yaş ve üzeri; yaş kapısı sunucu tarafında zorunludur.
+
+## Erken erişim
+- Uygulama, ilk 1000 erken erişim üyesi toplandığında App Store ve Google Play'de yayına girer.
+- Katılım ücretsizdir: e-posta, Google veya Apple ile kayıt.
+- Web sitesi: https://venntr.com
+
+## İşletmeler
+- İşletmeler haritada görünür, etkinlik yayınlar ve katılım analitiği görür.
+- Kayıt görüşme usulüdür (kendi kendine üyelik yoktur). Başvuru: https://venntr.com/isletmeler

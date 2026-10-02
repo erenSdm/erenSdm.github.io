@@ -15,7 +15,7 @@ export const rag: SystemDef = {
   copy: {
     code: "S-02",
     kicker: { en: "AI & retrieval", tr: "Yapay zekâ ve arama" },
-    title: { en: "RAG: answers from your own documents", tr: "RAG: kendi verinizden cevap" },
+    title: { en: "AI & RAG systems", tr: "Yapay zekâ ve RAG sistemleri" },
     body: {
       en: "An assistant that answers only from your PDFs, help center, Notion pages and product data, and shows the source for every claim. When the sources don't cover a question, it says so and hands the conversation to a person instead of making something up.",
       tr: "PDF'lerinizden, yardım merkezinizden, Notion sayfalarınızdan ve ürün verinizden cevap veren, her bilginin kaynağını gösteren bir asistan. Kaynaklarda olmayan bir soru gelirse bunu söylüyor ve uydurmak yerine konuşmayı bir insana aktarıyor.",

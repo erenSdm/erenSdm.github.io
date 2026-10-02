@@ -55,7 +55,12 @@ export function SplitButton({
   if (href) {
     if (external || href.startsWith("mailto:")) {
       return (
-        <a href={href} className={cls} aria-label={ariaLabel}>
+        <a
+          href={href}
+          className={cls}
+          aria-label={ariaLabel}
+          {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        >
           {inner}
         </a>
       );

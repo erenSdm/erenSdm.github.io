@@ -12,6 +12,7 @@ export interface Demo {
   brand: string; // product name shown on the card
   kind: DemoKind;
   route: string;
+  url?: string; // live production site; the card preview still uses `route` (most sites refuse iframes)
   accent: string; // hex — per-demo signature color used on the card chrome
   index: string; // telemetry index label, e.g. "W-01"
   domain: { en: string; tr: string }; // one-word category
@@ -38,6 +39,44 @@ export const WEB_DEMOS: Demo[] = [
       tr: "Binance Futures için otomatik trading botu RichCase’in yayındaki landing sayfası — yükselen altın kasa sütunları ve zıplayan RC coin ile gerçek zamanlı 3D hero, satın almadan Telegram bildirimine scroll sahneleri ve haftalık paketler.",
     },
     stack: ["Fintech", "Three.js", "3D Hero"],
+  },
+  {
+    slug: "venn",
+    brand: "VENN",
+    kind: "web",
+    route: "/sites/venn/index.html", // static export of venn/apps/web
+    url: "https://venntr.com",
+    accent: "#A78BFA",
+    index: "W-10",
+    domain: { en: "Social", tr: "Sosyal" },
+    tagline: {
+      en: "A calm social app for doing things together, in real life.",
+      tr: "Birlikte bir şeyler yapmak için sakin bir sosyal uygulama.",
+    },
+    blurb: {
+      en: "Venn's pre-launch landing, rebuilt: a live Istanbul event map, a mood-based meetup picker and a first-1000 waitlist. Groups and events first; the algorithm suggests, you decide.",
+      tr: "Venn'in lansman öncesi sayfası, yeniden kurgulandı: canlı İstanbul etkinlik haritası, moda göre buluşma önerisi ve ilk 1000 bekleme listesi. Önce grup ve etkinlik; algoritma önerir, karar senden.",
+    },
+    stack: ["Landing", "Interactive map", "Waitlist"],
+  },
+  {
+    slug: "nixrad",
+    brand: "NIXRAD",
+    kind: "web",
+    route: "/sites/nixrad/index.html", // mirror of the live nixradturkey.com homepage
+    url: "https://nixradturkey.com",
+    accent: "#c4622d",
+    index: "W-11",
+    domain: { en: "Interiors", tr: "İç Mimari" },
+    tagline: {
+      en: "Heat, cast as architecture.",
+      tr: "Isının mimarisi.",
+    },
+    blurb: {
+      en: "A brand landing for a Turkish designer-radiator maker — steel and hybrid radiators presented like sculpture, with a real catalogue, specs and list prices.",
+      tr: "Türk dekoratif radyatör üreticisi için marka sayfası — çelik ve hibrit radyatörler heykel gibi sunuluyor; gerçek katalog, ölçüler ve liste fiyatlarıyla.",
+    },
+    stack: ["Brand", "Catalogue", "Architectural"],
   },
   {
     slug: "saas-panel",
@@ -182,42 +221,6 @@ export const WEB_DEMOS: Demo[] = [
       tr: "Sinematik bir elektrikli araç ürün sayfası — spec sayaçları, canlı boya yapılandırıcısı ve lansman gibi düşen performans rakamları.",
     },
     stack: ["Automotive", "Configurator", "Cinematic"],
-  },
-  {
-    slug: "venn",
-    brand: "VENN",
-    kind: "web",
-    route: "/demos/venn",
-    accent: "#A78BFA",
-    index: "W-10",
-    domain: { en: "Social", tr: "Sosyal" },
-    tagline: {
-      en: "A calm social app for doing things together, in real life.",
-      tr: "Birlikte bir şeyler yapmak için sakin bir sosyal uygulama.",
-    },
-    blurb: {
-      en: "Venn's pre-launch landing, rebuilt: a live Istanbul event map, a mood-based meetup picker and a first-1000 waitlist. Groups and events first; the algorithm suggests, you decide.",
-      tr: "Venn'in lansman öncesi sayfası, yeniden kurgulandı: canlı İstanbul etkinlik haritası, moda göre buluşma önerisi ve ilk 1000 bekleme listesi. Önce grup ve etkinlik; algoritma önerir, karar senden.",
-    },
-    stack: ["Landing", "Interactive map", "Waitlist"],
-  },
-  {
-    slug: "nixrad",
-    brand: "NIXRAD",
-    kind: "web",
-    route: "/demos/nixrad",
-    accent: "#c4622d",
-    index: "W-11",
-    domain: { en: "Interiors", tr: "İç Mimari" },
-    tagline: {
-      en: "Heat, cast as architecture.",
-      tr: "Isının mimarisi.",
-    },
-    blurb: {
-      en: "A brand landing for a Turkish designer-radiator maker — steel and hybrid radiators presented like sculpture, with a real catalogue, specs and list prices.",
-      tr: "Türk dekoratif radyatör üreticisi için marka sayfası — çelik ve hibrit radyatörler heykel gibi sunuluyor; gerçek katalog, ölçüler ve liste fiyatlarıyla.",
-    },
-    stack: ["Brand", "Catalogue", "Architectural"],
   },
 ];
 
