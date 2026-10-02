@@ -12,6 +12,12 @@ interface LivePreviewProps {
   /** allow pointer interaction (off inside scroll-hijack sections) */
   interactive?: boolean;
   className?: string;
+  /** how far ahead of the viewport the iframe mounts (IntersectionObserver rootMargin) */
+  rootMargin?: string;
+  /** brand colour for the poster shown until the iframe paints */
+  accent?: string;
+  /** skip the idle prefetch (use for long lists so we don't warm 15 routes at once) */
+  warm?: boolean;
 }
 
 /**
@@ -35,6 +41,9 @@ export function LivePreview({
   baseHeight = 900,
   interactive = false,
   className,
+  rootMargin = "1200px 1200px",
+  accent,
+  warm = true,
 }: LivePreviewProps) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
@@ -57,17 +66,17 @@ export function LivePreview({
           io.disconnect();
         }
       },
-      { rootMargin: "1200px 1200px" }
+      { rootMargin }
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [rootMargin]);
 
   /* prefetch the route's document on idle so the iframe paints from cache the
      moment it mounts. Skipped once we're already loading it for real. */
   useEffect(() => {
-    if (visible) return;
-    const warm = () => {
+    if (visible || !warm) return;
+    const warmUp = () => {
       if (document.querySelector(`link[data-warm="${src}"]`)) return;
       const link = document.createElement("link");
       link.rel = "prefetch";
@@ -81,12 +90,12 @@ export function LivePreview({
       cancelIdleCallback?: (id: number) => void;
     };
     if (w.requestIdleCallback) {
-      const id = w.requestIdleCallback(warm);
+      const id = w.requestIdleCallback(warmUp);
       return () => w.cancelIdleCallback?.(id);
     }
-    const t = window.setTimeout(warm, 1500);
+    const t = window.setTimeout(warmUp, 1500);
     return () => window.clearTimeout(t);
-  }, [src, visible]);
+  }, [src, visible, warm]);
 
   useEffect(() => {
     const el = box.current;
@@ -113,12 +122,26 @@ export function LivePreview({
     <div ref={box} className={cn("absolute inset-0 overflow-hidden bg-ink", className)}>
       {/* skeleton until iframe paints */}
       <div
+        aria-hidden
         className={cn(
-          "absolute inset-0 flex items-center justify-center bg-coal transition-opacity duration-700",
+          "pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-coal transition-opacity duration-700",
           loaded ? "opacity-0" : "opacity-100"
         )}
+        style={
+          accent
+            ? {
+                backgroundImage: `radial-gradient(120% 90% at 50% 110%, ${accent}33, transparent 60%)`,
+              }
+            : undefined
+        }
       >
-        <span className="label animate-pulse">LOADING · {title}</span>
+        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ash">
+          <span
+            className="h-1.5 w-1.5 animate-pulse rounded-full"
+            style={{ backgroundColor: accent ?? "currentColor" }}
+          />
+          {title}
+        </span>
       </div>
       {scale > 0 && visible && (
         <iframe

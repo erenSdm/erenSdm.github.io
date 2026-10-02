@@ -2,52 +2,38 @@
 
 import { motion } from "framer-motion";
 import { useT } from "@/lib/i18n/context";
-import { SectionLabel } from "@/components/primitives/SectionLabel";
+import { Kicker } from "@/components/primitives/SplitButton";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export function Process() {
   const t = useT();
   return (
-    <section id="process" className="relative border-t border-line py-24 md:py-32">
-      <div className="mx-auto max-w-[1600px] px-5 md:px-10">
-        <div className="mb-16 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <SectionLabel className="mb-6">{t.process.label}</SectionLabel>
-            <h2 className="font-display text-huge text-paper">
-              {t.process.title}
-            </h2>
-          </div>
-        </div>
+    <section id="process" data-prism="process" className="relative bg-mist/[0.93] text-carbon">
+      <div className="mx-auto max-w-[1680px] px-4 py-24 md:px-10 md:py-36 lg:px-[8.5vw]">
+        <Kicker className="mb-8">{t.process.kicker}</Kicker>
+        <h2 className="font-wide text-display-lg max-w-[16ch]">{t.process.title}</h2>
 
-        <div className="grid gap-px border-y border-line bg-line md:grid-cols-4">
-          {t.process.steps.map((step, i) => (
-            <motion.div
-              key={step.n}
-              initial={{ opacity: 0, y: 24 }}
+        <ol className="mt-16 border-t border-dashed border-carbon/35 md:mt-24">
+          {t.process.steps.map((s, i) => (
+            <motion.li
+              key={s.n}
+              initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={{ duration: 0.6, ease, delay: i * 0.1 }}
-              className="group relative flex flex-col gap-6 bg-ink p-8 md:p-8"
+              viewport={{ once: true, margin: "-8% 0px" }}
+              transition={{ duration: 0.7, ease, delay: i * 0.06 }}
+              className="grid grid-cols-[3.25rem_1fr] gap-x-3 gap-y-3 border-b border-dashed border-carbon/35 py-8 md:grid-cols-12 md:items-baseline md:gap-6 md:py-10"
             >
-              <div className="flex items-center justify-between">
-                <span className="font-display text-6xl leading-none text-dim transition-colors duration-300 group-hover:text-acid">
-                  {step.n}
-                </span>
-                <span className="crosshair text-lg" aria-hidden />
-              </div>
-              <span aria-hidden className="dotted h-[2px] w-full" />
-              <div>
-                <h3 className="font-mono text-sm font-semibold uppercase tracking-[0.16em] text-paper">
-                  {step.title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-ash">
-                  {step.body}
-                </p>
-              </div>
-            </motion.div>
+              <span className="font-plex tabular text-xl md:col-span-1 md:text-2xl">{s.n}</span>
+              <h3 className="font-wide text-[clamp(1.4rem,2.6vw,2.4rem)] leading-none md:col-span-5">
+                {s.title}
+              </h3>
+              <p className="font-plex col-start-2 max-w-[52ch] text-[15px] leading-[1.7] text-carbon/75 md:col-span-6 md:col-start-auto">
+                {s.body}
+              </p>
+            </motion.li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );

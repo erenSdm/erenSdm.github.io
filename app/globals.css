@@ -29,11 +29,20 @@
   /* alert — hazard, used sparingly */
   --color-hazard: #ff3b1f;
 
+  /* homepage (gertix-inspired) — volt lime used like a signal light */
+  --color-volt: #ccff00;
+  --color-mist: #e8e9e4;
+  --color-fog: #d6d7d1;
+  --color-graphite: #1d1e1b;
+  --color-carbon: #0c0d0b;
+
   /* fonts (wired in layout.tsx via next/font) */
   --font-display: var(--font-anton), "Arial Narrow", sans-serif;
   --font-grotesk: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, "SFMono-Regular", monospace;
   --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-wide: var(--font-lexend-exa), "Century Gothic", sans-serif;
+  --font-plex: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
 
   /* motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -142,6 +151,58 @@ html.lenis body {
     background-image: linear-gradient(var(--color-line-soft) 1px, transparent 1px),
       linear-gradient(90deg, var(--color-line-soft) 1px, transparent 1px);
     background-size: 64px 64px;
+  }
+
+  /* ---------- homepage system ---------- */
+  .font-wide {
+    font-family: var(--font-wide);
+    text-transform: uppercase;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+    font-weight: 400;
+  }
+  .font-plex {
+    font-family: var(--font-plex);
+  }
+  /* mono caps UI label — nav pills, buttons, tags */
+  .ui {
+    font-family: var(--font-plex);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+  .text-display-xl {
+    font-size: clamp(2.4rem, 8vw, 9rem);
+  }
+  .text-display-lg {
+    font-size: clamp(2rem, 5.4vw, 5.5rem);
+  }
+  .text-display-md {
+    font-size: clamp(1.4rem, 2.8vw, 2.6rem);
+  }
+  .text-wordmark {
+    font-size: clamp(2.6rem, 14.6vw, 16.5rem);
+  }
+  /* dashed hairlines */
+  .rule-dashed {
+    border-top: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  }
+  .frame-dashed {
+    border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  }
+  /* |inline| highlighted term in mono copy */
+  .term {
+    white-space: nowrap;
+  }
+  .term::before,
+  .term::after {
+    content: "|";
+    opacity: 0.4;
+    font-weight: 400;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 
   /* crosshair marker */

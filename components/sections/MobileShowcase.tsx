@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { useStackScroll } from "@/lib/useStackScroll";
 import { PhoneFrame } from "@/components/primitives/PhoneFrame";
 import { LivePreview } from "@/components/showcase/LivePreview";
-import { SectionLabel } from "@/components/primitives/SectionLabel";
+import { Kicker } from "@/components/primitives/SplitButton";
 import { cn } from "@/lib/utils";
 
 export function MobileShowcase() {
@@ -33,17 +33,13 @@ export function MobileShowcase() {
   useStackScroll(wrap, MOBILE_DEMOS.length, !stacked);
 
   return (
-    <section id="mobile" className="relative border-t border-line">
+    <section id="mobile" data-prism="mobile" className="relative text-paper">
       {/* header */}
-      <div className="mx-auto max-w-[1600px] px-5 pb-6 pt-24 md:px-10 md:pt-32">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <SectionLabel className="mb-6">{t.mobile.label}</SectionLabel>
-            <h2 className="font-display text-giant text-paper">
-              {t.mobile.title}
-            </h2>
-          </div>
-          <p className="max-w-xs font-mono text-xs leading-relaxed text-ash md:pb-3">
+      <div className="mx-auto max-w-[1680px] px-4 pb-6 pt-24 md:px-10 md:pt-36 lg:px-[8.5vw]">
+        <Kicker className="mb-8">{t.mobile.label}</Kicker>
+        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+          <h2 className="font-wide text-display-xl">{t.mobile.title}</h2>
+          <p className="font-plex max-w-[40ch] text-[15px] leading-[1.7] text-paper/70">
             {t.mobile.subtitle}
           </p>
         </div>
@@ -51,7 +47,7 @@ export function MobileShowcase() {
 
       {stacked ? (
         /* mobile + reduced motion — plain vertical list, no scroll hijack */
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-20 px-5 pb-24 md:gap-24 md:px-10">
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-20 px-4 pb-24 pt-10 md:gap-24 md:px-10">
           {MOBILE_DEMOS.map((demo, i) => (
             <div
               key={demo.slug}
@@ -69,7 +65,7 @@ export function MobileShowcase() {
       ) : (
         /* pinned phone stack */
         <div ref={wrap} className="relative h-[100dvh] overflow-hidden">
-          <div className="mx-auto grid h-full max-w-[1400px] items-center gap-8 px-5 md:grid-cols-2 md:gap-16 md:px-10">
+          <div className="mx-auto grid h-full max-w-[1680px] items-center gap-8 px-4 md:grid-cols-2 md:gap-16 md:px-10 lg:px-[8.5vw]">
             {/* copy stack */}
             <div className="relative order-2 md:order-1">
               {MOBILE_DEMOS.map((demo, i) => (
@@ -112,6 +108,8 @@ function Phone({ demo }: { demo: (typeof MOBILE_DEMOS)[number] }) {
       <LivePreview
         src={demo.route}
         title={demo.brand}
+        accent={demo.accent}
+        rootMargin="800px 0px"
         baseWidth={390}
         baseHeight={844}
       />
@@ -132,33 +130,36 @@ function Copy({
 }) {
   return (
     <div>
-      <div className="mb-4 flex items-center gap-3">
-        <span className="font-mono text-sm text-acid">{demo.index}</span>
-        <span className="dotted h-[2px] w-16" />
-        <span className="label">{demo.domain[locale]}</span>
+      <div className="ui mb-5 flex items-center gap-3 text-paper/60">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-volt" />
+        <span className="tabular">{demo.index}</span>
+        <span aria-hidden className="w-10 border-t border-dashed border-paper/40" />
+        <span>{demo.domain[locale]}</span>
       </div>
-      <h3 className="font-display text-giant leading-[0.9] text-paper">
-        {demo.brand}
-      </h3>
-      <p className="mt-5 max-w-md text-lg leading-snug text-bone">
+      <h3 className="font-wide text-display-lg">{demo.brand}</h3>
+      <p className="font-plex mt-6 max-w-md text-base leading-snug text-paper/90">
         {demo.tagline[locale]}
       </p>
-      <p className="mt-4 max-w-md text-sm leading-relaxed text-ash">
+      <p className="font-plex mt-4 max-w-md text-sm leading-[1.7] text-paper/60">
         {demo.blurb[locale]}
       </p>
-      <div className="mt-6 flex items-center gap-4">
+      <div className="mt-8 flex items-center gap-5">
         <Link
           href={demo.route}
-          className="group flex items-center gap-3 border-2 border-paper/25 px-5 py-3 font-mono text-xs font-semibold uppercase tracking-widest text-paper transition-colors hover:border-acid hover:text-acid"
+          className="group inline-flex items-stretch gap-1 outline-none focus-visible:ring-2 focus-visible:ring-volt"
         >
-          {label}
-          <ArrowUpRight
-            className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            strokeWidth={2}
-          />
+          <span className="ui flex h-12 items-center bg-paper px-5 text-carbon transition-colors group-hover:bg-white">
+            {label}
+          </span>
+          <span className="flex h-12 w-12 items-center justify-center bg-paper text-carbon transition-colors group-hover:bg-white" aria-hidden>
+            <ArrowUpRight
+              className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              strokeWidth={1.5}
+            />
+          </span>
         </Link>
-        <span className="font-mono text-xs text-dim">
-          {String(i + 1).padStart(2, "0")} / 0{MOBILE_DEMOS.length}
+        <span className="ui tabular text-paper/45">
+          {String(i + 1).padStart(2, "0")} / {String(MOBILE_DEMOS.length).padStart(2, "0")}
         </span>
       </div>
     </div>

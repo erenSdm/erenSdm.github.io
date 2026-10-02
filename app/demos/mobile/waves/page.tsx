@@ -1,16 +1,34 @@
+import type { Metadata, Viewport } from "next";
 import { NowPlaying } from "@/components/demos/waves/NowPlaying";
+import { DeviceShell } from "@/components/demos/chat/DeviceShell";
 
-/**
- * WAVES — mobile music player "now playing" screen.
- * Rendered inside the MONOLITH phone frame; on its own route the app column is
- * centered (max-w ~430px) over a dark backdrop.
- */
-export default function WavesPage() {
+export const metadata: Metadata = {
+  title: "WAVES — Now Playing",
+  description: "WAVES — a mobile music player with a live waveform scrubber and queue.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "WAVES",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0A090C",
+  colorScheme: "dark",
+};
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ embed?: string }>;
+}) {
+  const { embed } = await searchParams;
   return (
-    <main className="flex min-h-[100dvh] w-full justify-center bg-[#050406]">
-      <div className="flex min-h-[100dvh] w-full max-w-[430px] flex-col">
-        <NowPlaying />
-      </div>
-    </main>
+    <DeviceShell embed={embed === "1"} background="#0A090C">
+      <NowPlaying />
+    </DeviceShell>
   );
 }

@@ -165,6 +165,60 @@ export const WEB_DEMOS: Demo[] = [
     },
     stack: ["Automotive", "Configurator", "Cinematic"],
   },
+  {
+    slug: "richcase",
+    brand: "RICHCASE",
+    kind: "web",
+    route: "/demos/richcase",
+    accent: "#D4AF37",
+    index: "W-09",
+    domain: { en: "Fintech", tr: "Fintech" },
+    tagline: {
+      en: "An automated trading bot that says: leave it to me.",
+      tr: "\"Leave it to me\" diyen otomatik trading botu.",
+    },
+    blurb: {
+      en: "Landing for RichCase, an automated Binance Futures trading bot. A gold-on-ink rebuild with a live PnL panel, animated vault columns, a Telegram notification flow and a swipeable weekly-plan carousel.",
+      tr: "Binance Futures için otomatik trading botu RichCase'in landing sayfası. Altın-siyah yeniden tasarım: canlı PnL paneli, animasyonlu kasa sütunları, Telegram bildirim akışı ve kaydırmalı haftalık paket karuseli.",
+    },
+    stack: ["Fintech", "Live data", "Pricing"],
+  },
+  {
+    slug: "venn",
+    brand: "VENN",
+    kind: "web",
+    route: "/demos/venn",
+    accent: "#A78BFA",
+    index: "W-10",
+    domain: { en: "Social", tr: "Sosyal" },
+    tagline: {
+      en: "A calm social app for doing things together, in real life.",
+      tr: "Birlikte bir şeyler yapmak için sakin bir sosyal uygulama.",
+    },
+    blurb: {
+      en: "Venn's pre-launch landing, rebuilt: a live Istanbul event map, a mood-based meetup picker and a first-1000 waitlist. Groups and events first; the algorithm suggests, you decide.",
+      tr: "Venn'in lansman öncesi sayfası, yeniden kurgulandı: canlı İstanbul etkinlik haritası, moda göre buluşma önerisi ve ilk 1000 bekleme listesi. Önce grup ve etkinlik; algoritma önerir, karar senden.",
+    },
+    stack: ["Landing", "Interactive map", "Waitlist"],
+  },
+  {
+    slug: "nixrad",
+    brand: "NIXRAD",
+    kind: "web",
+    route: "/demos/nixrad",
+    accent: "#c4622d",
+    index: "W-11",
+    domain: { en: "Interiors", tr: "İç Mimari" },
+    tagline: {
+      en: "Heat, cast as architecture.",
+      tr: "Isının mimarisi.",
+    },
+    blurb: {
+      en: "A brand landing for a Turkish designer-radiator maker — steel and hybrid radiators presented like sculpture, with a real catalogue, specs and list prices.",
+      tr: "Türk dekoratif radyatör üreticisi için marka sayfası — çelik ve hibrit radyatörler heykel gibi sunuluyor; gerçek katalog, ölçüler ve liste fiyatlarıyla.",
+    },
+    stack: ["Brand", "Catalogue", "Architectural"],
+  },
 ];
 
 export const MOBILE_DEMOS: Demo[] = [
