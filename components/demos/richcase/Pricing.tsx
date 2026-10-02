@@ -1,192 +1,217 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
-import { GOLD, GOLD_HI, Reveal, fBody, fDisplay, fMono } from "./ui";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Info } from "lucide-react";
 
-/* Real plans from rc-platform/frontend-landing Pricing.tsx */
-const FEATURES = ["Tam otomatik trading", "Sadece Binance", "Kaldıraçlı işlemler", "Anlık bildirimler", "7/24 Destek"];
-const PLANS = [
-  { name: "Lite", limit: "500", price: "75" },
-  { name: "Pro", limit: "1.000", price: "110" },
-  { name: "Max", limit: "1.500", price: "150", highlight: true },
-  { name: "Elite", limit: "2.000", price: "250" },
-  { name: "Ultimate", limit: "5.000", price: "550" },
+const plans = [
+    { name: "Lite",     limit: "500",   price: "75",  features: ["Tam otomatik trading", "Sadece Binance", "Kaldıraçlı işlemler", "Anlık bildirimler", "7/24 Destek"], highlight: false },
+    { name: "Pro",      limit: "1.000", price: "110", features: ["Tam otomatik trading", "Sadece Binance", "Kaldıraçlı işlemler", "Anlık bildirimler", "7/24 Destek"], highlight: false },
+    { name: "Max",      limit: "1.500", price: "150", features: ["Tam otomatik trading", "Sadece Binance", "Kaldıraçlı işlemler", "Anlık bildirimler", "7/24 Destek"], highlight: true },
+    { name: "Elite",    limit: "2.000", price: "250", features: ["Tam otomatik trading", "Sadece Binance", "Kaldıraçlı işlemler", "Anlık bildirimler", "7/24 Destek"], highlight: false },
+    { name: "Ultimate", limit: "5.000", price: "550", features: ["Tam otomatik trading", "Sadece Binance", "Kaldıraçlı işlemler", "Anlık bildirimler", "7/24 Destek"], highlight: false },
 ];
-const INITIAL = 2;
 
-export function Pricing() {
-  const scroller = useRef<HTMLDivElement>(null);
-  const cards = useRef<(HTMLLIElement | null)[]>([]);
-  const [active, setActive] = useState(INITIAL);
+const INITIAL_ACTIVE = 2; // Max paketi (index 2)
 
-  // Center the recommended plan on mobile carousels.
-  useEffect(() => {
-    const el = scroller.current;
-    const card = cards.current[INITIAL];
-    if (!el || !card) return;
-    const t = window.setTimeout(() => {
-      if (el.scrollWidth <= el.clientWidth) return;
-      const er = el.getBoundingClientRect();
-      const cr = card.getBoundingClientRect();
-      el.scrollLeft += cr.left + cr.width / 2 - (er.left + er.width / 2);
-      setActive(INITIAL);
-    }, 120);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  const onScroll = () => {
-    const el = scroller.current;
-    if (!el) return;
-    const er = el.getBoundingClientRect();
-    const center = er.left + er.width / 2;
-    let best = 0;
-    let dist = Infinity;
-    cards.current.forEach((c, i) => {
-      if (!c) return;
-      const r = c.getBoundingClientRect();
-      const d = Math.abs(r.left + r.width / 2 - center);
-      if (d < dist) {
-        dist = d;
-        best = i;
-      }
-    });
-    setActive(best);
-  };
-
-  return (
-    <section id="paketler" className="relative overflow-hidden border-t border-white/[0.06] bg-[#0d0d0e] py-24 md:py-36">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2 rounded-full opacity-50 blur-[120px]"
-        style={{ background: "radial-gradient(closest-side, rgba(212,175,55,0.16), transparent)" }}
-      />
-      <div className="relative mx-auto max-w-[1240px] px-5 md:px-8">
-        <Reveal>
-          <h2
-            className={`${fDisplay} text-[clamp(2.8rem,10vw,6rem)] font-black uppercase leading-[0.9] tracking-[-0.04em] text-white`}
-            style={{ fontStretch: "115%" }}
-          >
-            Paketini <span style={{ color: GOLD_HI }}>seç</span>
-          </h2>
-          <p className={`${fBody} mt-6 max-w-[46ch] text-[17px] leading-[1.6] text-[#9a9a9a]`}>
-            Sadece kazandıkça büyüt. Tüm paketlerde haftalık ödeme, uzun vadeli taahhüt yok.
-          </p>
-        </Reveal>
-      </div>
-
-      <Reveal delay={0.1}>
-        <div
-          ref={scroller}
-          onScroll={onScroll}
-          className="relative mx-auto mt-14 max-w-[1240px] snap-x snap-mandatory overflow-x-auto px-5 pb-6 [scrollbar-width:none] md:mt-20 md:px-8 xl:overflow-visible [&::-webkit-scrollbar]:hidden"
-        >
-          <ul className="flex gap-3 xl:grid xl:grid-cols-5">
-            {PLANS.map((p, i) => {
-              const hi = !!p.highlight;
-              return (
-                <li
-                  key={p.name}
-                  ref={(el) => {
-                    cards.current[i] = el;
-                  }}
-                  className={`w-[76vw] max-w-[300px] shrink-0 snap-center transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] xl:w-auto xl:max-w-none xl:opacity-100 ${
-                    active === i ? "opacity-100" : "opacity-60 xl:opacity-100"
-                  } ${hi ? "xl:-translate-y-3" : ""}`}
-                >
-                  <div
-                    className={`h-full rounded-[1.75rem] p-1.5 ${hi ? "" : "border border-white/[0.07] bg-white/[0.02]"}`}
-                    style={
-                      hi
-                        ? {
-                            background: `linear-gradient(160deg, ${GOLD_HI}, rgba(212,175,55,0.25) 45%, rgba(212,175,55,0.05))`,
-                            boxShadow: "0 30px 80px -30px rgba(212,175,55,0.45)",
-                          }
-                        : undefined
-                    }
-                  >
-                    <div className="flex h-full flex-col rounded-[calc(1.75rem-0.375rem)] bg-[#0f0f10] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                      <div className="flex items-center justify-between">
-                        <h3
-                          lang="en"
-                          className={`${fDisplay} text-[1.6rem] font-black uppercase leading-none tracking-[-0.02em]`}
-                          style={{ color: hi ? GOLD_HI : "#f5f5f5", fontStretch: "110%" }}
-                        >
-                          {p.name}
-                        </h3>
-                        {hi && (
-                          <span
-                            className={`${fMono} rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-[#0a0a0a]`}
-                            style={{ background: GOLD }}
-                          >
+function PlanCardInner({ plan, isHovered }: { plan: typeof plans[0]; isHovered: boolean }) {
+    const isPro = plan.highlight;
+    return (
+        <>
+            <div className="mb-6">
+                {isPro && (
+                    <div className="flex items-baseline justify-end mb-2">
+                        <span className="font-body text-mono-sm text-gold-400 uppercase tracking-[0.1em]">
                             Tavsiye
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-7 border-b border-white/[0.06] pb-6">
-                        <div className={`${fMono} text-[10.5px] uppercase tracking-[0.16em] text-[#6b6b6b]`}>Yönetilen bakiye</div>
-                        <div className="mt-2 flex items-baseline gap-1.5">
-                          <span
-                            className={`${fDisplay} text-[2rem] font-extrabold leading-none tracking-[-0.03em] tabular-nums`}
-                            style={{ color: hi ? GOLD_HI : "#d4d4d4" }}
-                          >
-                            {p.limit}
-                          </span>
-                          <span className={`${fMono} text-[11px] text-[#6b6b6b]`}>USDT</span>
-                        </div>
-                        <div className="mt-6 flex items-baseline gap-1">
-                          <span className={`${fDisplay} text-[1.15rem] font-bold text-[#7a7a7a]`}>$</span>
-                          <span className={`${fDisplay} text-[3.2rem] font-black leading-none tracking-[-0.04em] text-white tabular-nums`}>
-                            {p.price}
-                          </span>
-                        </div>
-                        <div className={`${fMono} mt-2 text-[10.5px] uppercase tracking-[0.16em] text-[#6b6b6b]`}>/ hafta</div>
-                      </div>
-
-                      <ul className="mt-6 flex flex-1 flex-col gap-3">
-                        {FEATURES.map((f) => (
-                          <li key={f} className={`${fBody} flex items-center gap-3 text-[13.5px] text-[#c4c4c4]`}>
-                            <span
-                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
-                              style={{ background: hi ? "rgba(212,175,55,0.22)" : "rgba(255,255,255,0.05)" }}
-                            >
-                              <Check className="h-2.5 w-2.5" style={{ color: hi ? GOLD_HI : "#9a9a9a" }} strokeWidth={3} />
-                            </span>
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-
-                      <a
-                        href="#top"
-                        className={`${fBody} mt-8 block rounded-full py-3.5 text-center text-[14px] font-semibold transition-[transform,background-color,border-color,color] duration-300 active:scale-[0.98] ${
-                          hi
-                            ? "text-[#0a0a0a] hover:brightness-110"
-                            : "border border-[#D4AF37]/30 text-[#E6C75A] hover:border-[#D4AF37]/70 hover:bg-[#D4AF37]/[0.06]"
-                        }`}
-                        style={hi ? { background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` } : undefined}
-                      >
-                        Başla
-                      </a>
+                        </span>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </Reveal>
+                )}
+                <h3 className={`font-heading font-extrabold text-2xl lg:text-3xl uppercase tracking-tight mb-3 ${isPro ? "text-gold-400" : "text-ink-100"}`}>
+                    {plan.name}
+                </h3>
+            </div>
 
-      <div className="mt-4 flex justify-center gap-1.5 xl:hidden" aria-hidden>
-        {PLANS.map((p, i) => (
-          <span
-            key={p.name}
-            className="h-1 rounded-full transition-all duration-500"
-            style={{ width: active === i ? 22 : 6, background: active === i ? GOLD : "rgba(255,255,255,0.15)" }}
-          />
-        ))}
-      </div>
-    </section>
-  );
+            <div className="mb-7 pb-6 border-b border-ink-600">
+                <div className="mb-4">
+                    <div className="font-body text-mono-sm tracking-[0.14em] text-ink-400 mb-1">
+                        Yönetilen Bakiye
+                    </div>
+                    <span className={`font-heading font-extrabold text-3xl lg:text-4xl leading-none tracking-tight transition-colors duration-200 ${isPro || isHovered ? "text-gold-400" : "text-ink-200"}`}>
+                        {plan.limit}
+                    </span>
+                    <span className="font-body text-mono-sm text-ink-400 ml-1.5">USDT</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                    <span className="font-heading font-bold text-xl text-ink-300">$</span>
+                    <span className={`font-heading font-extrabold text-4xl lg:text-5xl leading-none tracking-tight ${isPro ? "text-ink-100" : "text-ink-200"}`}>
+                        {plan.price}
+                    </span>
+                </div>
+                <div className="font-body text-mono-sm uppercase tracking-[0.16em] text-ink-400 mt-2">
+                    / hafta
+                </div>
+            </div>
+
+            <ul className="space-y-3 mb-8 flex-grow">
+                {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3 font-body text-sm text-ink-200">
+                        <span
+                            aria-hidden="true"
+                            className="mt-1.5 inline-block w-2 h-2 flex-shrink-0 border"
+                            style={{
+                                borderColor: isPro || isHovered ? "var(--color-gold-500)" : "var(--color-gold-700)",
+                                background: isPro || isHovered ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.1)",
+                            }}
+                        />
+                        {feature}
+                    </li>
+                ))}
+            </ul>
+
+            <a
+                href="#"
+                className={`
+                    block text-center w-full py-3.5 font-body font-bold text-sm uppercase tracking-[0.06em] transition-all duration-200
+                    ${isPro
+                        ? "bg-gold-500 text-ink-950 hover:bg-gold-400"
+                        : "bg-transparent border border-gold-700/50 text-gold-400 hover:bg-gold-500/10 hover:border-gold-500"
+                    }
+                `}
+            >
+                Başla
+            </a>
+        </>
+    );
+}
+
+export default function Pricing() {
+    const [hovered, setHovered] = useState<number | null>(null);
+    const [activeIndex, setActiveIndex] = useState(INITIAL_ACTIVE);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    const handleScroll = useCallback(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+        const containerCenter = container.scrollLeft + container.clientWidth / 2;
+        let closest = 0;
+        let closestDist = Infinity;
+        cardRefs.current.forEach((card, i) => {
+            if (!card) return;
+            const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+            const dist = Math.abs(containerCenter - cardCenter);
+            if (dist < closestDist) { closestDist = dist; closest = i; }
+        });
+        setActiveIndex(closest);
+    }, []);
+
+    // Başlangıçta Max (3. paket) kartını ortaya getir
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+        const timer = setTimeout(() => {
+            const card = cardRefs.current[INITIAL_ACTIVE];
+            if (!card) return;
+            const scrollTo = card.offsetLeft - (container.clientWidth - card.offsetWidth) / 2;
+            container.scrollLeft = Math.max(0, scrollTo);
+        }, 60);
+        return () => clearTimeout(timer);
+    }, []);
+
+    return (
+        <section id="pricing" className="relative py-16 md:py-24 lg:py-36 bg-ink-900 overflow-hidden">
+
+            {/* Başlık */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
+                <div className="max-w-3xl mb-10 md:mb-16 lg:mb-24">
+                    <h2 className="font-heading font-extrabold text-display-2 text-ink-100 leading-none mb-6">
+                        Paketini <span className="text-gradient-gold">seç</span>
+                    </h2>
+                    <p className="font-body text-body-lg text-ink-300 max-w-xl">
+                        Sadece kazandıkça büyüt. Tüm paketlerde haftalık ödeme, uzun vadeli taahhüt yok.
+                    </p>
+                </div>
+            </div>
+
+            {/* ===== Mobil Carousel (lg altı) ===== */}
+            <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="lg:hidden relative z-10 flex overflow-x-auto pb-6"
+                style={{
+                    scrollSnapType: "x mandatory",
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                    gap: "1rem",
+                    paddingLeft: "calc(50% - 36vw)",
+                    paddingRight: "calc(50% - 36vw)",
+                }}
+            >
+                {plans.map((plan, idx) => {
+                    const isPro = plan.highlight;
+                    const isActive = activeIndex === idx;
+                    const isHovered = hovered === idx;
+                    return (
+                        <div
+                            key={plan.name}
+                            ref={(el) => { cardRefs.current[idx] = el; }}
+                            onMouseEnter={() => setHovered(idx)}
+                            onMouseLeave={() => setHovered(null)}
+                            className={`relative flex flex-col p-5 bg-ink-850 ${
+                                isPro
+                                    ? "border-2 border-gold-500 shadow-brutal"
+                                    : "border border-ink-600"
+                            }`}
+                            style={{
+                                scrollSnapAlign: "center",
+                                flexShrink: 0,
+                                width: "72vw",
+                                maxWidth: "320px",
+                                transform: isActive ? "scale(1)" : "scale(0.88)",
+                                opacity: isActive ? 1 : 0.58,
+                                transition: "transform 380ms cubic-bezier(0.22,1,0.36,1), opacity 380ms",
+                                willChange: "transform",
+                            }}
+                        >
+                            <PlanCardInner plan={plan} isHovered={isHovered} />
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* ===== Desktop Grid (lg ve üstü) ===== */}
+            <div className="hidden lg:block container mx-auto px-10 relative z-10">
+                <div className="grid grid-cols-5 gap-4">
+                    {plans.map((plan, idx) => {
+                        const isPro = plan.highlight;
+                        const isHovered = hovered === idx;
+                        return (
+                            <div
+                                key={plan.name}
+                                onMouseEnter={() => setHovered(idx)}
+                                onMouseLeave={() => setHovered(null)}
+                                className={`
+                                    relative flex flex-col p-7 transition-all duration-300
+                                    bg-ink-850
+                                    ${isPro
+                                        ? "border-2 border-gold-500 shadow-brutal scale-[1.02] z-10 hover:translate-x-[2px] hover:translate-y-[2px] hover:[box-shadow:2px_2px_0_0_rgba(0,0,0,1)]"
+                                        : "border border-ink-600 hover:border-gold-700/60"
+                                    }
+                                `}
+                            >
+                                <PlanCardInner plan={plan} isHovered={isHovered} />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Alt not */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-10 relative z-10 mt-10 md:mt-14">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 font-body text-sm text-ink-400">
+                    <Info className="w-4 h-4 text-gold-600" />
+                    <p className="text-center">Tüm paketlerde Binance API bağlantısı gereklidir. Ödemeler USDT (BEP-20) olarak alınır.</p>
+                </div>
+            </div>
+        </section>
+    );
 }

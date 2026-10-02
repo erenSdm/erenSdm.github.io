@@ -30,15 +30,15 @@ export function Hero() {
       {/* faint vignette so copy stays legible over the prism */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,13,11,0.82)_0%,rgba(12,13,11,0.35)_55%,rgba(12,13,11,0)_100%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(10,11,14,0.7)_0%,rgba(10,11,14,0.25)_42%,rgba(10,11,14,0)_62%)]"
       />
 
-      <div className="relative mx-auto flex w-full max-w-[1680px] flex-1 flex-col justify-center px-4 pb-16 pt-28 md:px-10 md:pt-32 lg:px-[8.5vw]">
+      <div className="relative flex w-full flex-1 flex-col justify-center px-4 pb-16 pt-28 md:px-10 md:pt-32 lg:pl-[3.5vw] lg:pr-[48vw] xl:pr-[50vw]">
         <motion.div {...enter(0)}>
           <Kicker className="mb-8 text-paper md:mb-10">{t.hero.kicker}</Kicker>
         </motion.div>
 
-        <h1 className="font-wide text-[clamp(1.9rem,calc(5.9vw_+_0.4rem),6.4rem)] leading-[1.02]">
+        <h1 className="font-wide text-[clamp(1.9rem,calc(4.9vw_+_0.4rem),5.6rem)] leading-[1.02]">
           {t.hero.title.map((line, i) => (
             <span key={i} className="block overflow-hidden pb-[0.04em]">
               <motion.span

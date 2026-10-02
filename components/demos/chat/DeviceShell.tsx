@@ -26,16 +26,20 @@ export function DeviceShell({
   children,
   embed,
   background,
+  tone = "dark",
 }: {
   children: React.ReactNode;
   embed: boolean;
   background: string;
+  /** light apps sit on a soft neutral desktop backdrop instead of black */
+  tone?: "light" | "dark";
 }) {
+  const backdrop = tone === "light" ? "#E4E6E9" : "#000";
   return (
     <div
       className={cn(
         ios.variable,
-        "ios-root flex min-h-[100dvh] w-full justify-center bg-black md:items-center",
+        "ios-root flex min-h-[100dvh] w-full justify-center md:items-center",
         embed && "is-embed",
       )}
     >
@@ -46,13 +50,17 @@ export function DeviceShell({
         .ios-root .font-mono,.ios-root .font-display,.ios-root .label{font-family:${IOS_STACK};font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
         .ios-root .font-display{font-weight:700;letter-spacing:-0.035em}
         .ios-root button,.ios-root a{touch-action:manipulation}
-        html:has(.ios-root),html:has(.ios-root) body{background:#000;overscroll-behavior:none}
+        html:has(.ios-root),html:has(.ios-root) body{background:${backdrop};overscroll-behavior:none}
+        .ios-root{background:${backdrop}}
       `}</style>
       <div
         className={cn(
           "relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden",
+          !embed && "md:h-[min(932px,calc(100dvh-48px))] md:rounded-[44px]",
           !embed &&
-            "md:h-[min(932px,calc(100dvh-48px))] md:rounded-[44px] md:shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.08)]",
+            (tone === "light"
+              ? "md:shadow-[0_40px_100px_-30px_rgba(20,24,32,0.35),0_0_0_1px_rgba(20,24,32,0.06)]"
+              : "md:shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.08)]"),
         )}
         style={{ background }}
       >

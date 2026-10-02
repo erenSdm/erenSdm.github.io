@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { WalletScreen } from "@/components/demos/wallet/WalletScreen";
+import { WalletApp } from "@/components/demos/wallet/WalletApp";
 import { DeviceShell } from "@/components/demos/chat/DeviceShell";
 
 export const metadata: Metadata = {
   title: "MINT — Wallet",
-  description: "A wallet you actually open. Cards, balances, and spending at a glance.",
+  description: "Send, split and budget in lira, euro and dollar from one light, fast wallet.",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "MINT",
   },
 };
@@ -16,8 +16,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#07090A",
-  colorScheme: "dark",
+  themeColor: "#F3F4F6",
+  colorScheme: "light",
 };
 
 export default async function Page({
@@ -27,8 +27,8 @@ export default async function Page({
 }) {
   const { embed } = await searchParams;
   return (
-    <DeviceShell embed={embed === "1"} background="#07090A">
-      <WalletScreen />
+    <DeviceShell embed={embed === "1"} background="#F3F4F6" tone="light">
+      <WalletApp />
     </DeviceShell>
   );
 }

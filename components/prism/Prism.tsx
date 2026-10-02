@@ -3,9 +3,8 @@
 import dynamic from "next/dynamic";
 
 /**
- * Fixed, scroll-driven glass monolith. Mount once (e.g. at the top of app/page.tsx).
- * Sections opt in with data-prism="hero|manifesto|services|work|mobile|process|contact";
- * service cards with data-prism-step="0..N".
+ * Hero glass prism + atmospheric background (fixed canvas, z-index 0).
+ * Reads the hero's height from [data-prism="hero"]; fades out and stops rendering once scrolled past it.
  */
 const PrismCanvas = dynamic(() => import("./PrismCanvas"), {
   ssr: false,

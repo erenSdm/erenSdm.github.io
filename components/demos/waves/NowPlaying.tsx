@@ -1,279 +1,251 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  ChevronDown,
-  MoreVertical,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-  Repeat,
-  Play,
-  Pause,
-  Heart,
-} from "lucide-react";
-import { Waveform } from "./Waveform";
-import {
-  ACCENT,
-  NOW_PLAYING,
-  PLAYLIST,
-  UP_NEXT,
-} from "./data";
+import { useState } from "react";
+import { AnimatePresence, motion, useDragControls, useReducedMotion } from "framer-motion";
+import { ChevronDown, Heart, ListMusic, MicVocal, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from "lucide-react";
+import { AlbumCover } from "./Cover";
+import { getArtist } from "./data";
+import { Lyrics } from "./Lyrics";
+import { usePlayer } from "./player";
+import { QueueSheet } from "./QueueSheet";
+import { WaveScrubber } from "./Scrubber";
+import { Equalizer, SPRING, STROKE, useNav } from "./ui";
 
 /**
- * WAVES — mobile music player "now playing" screen.
- * Designed for a 390px column, fills the phone height. Violet-pink accent
- * used flat/editorial: no blurred orbs, no glow — just pigment on near-black.
+ * Full-screen player. Slides up over the app inside the device column and is
+ * dismissed by dragging the header/artwork down. Every colour here resolves
+ * from the --pal-* custom properties, which are registered with @property so
+ * gradients and controls crossfade when the track (and album palette) changes.
  */
-export function NowPlaying() {
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState(true);
-  const [liked, setLiked] = useState(true);
-  const [elapsed, setElapsed] = useState(NOW_PLAYING.startSec);
-
-  // Advance the clock while playing. Uses a wall-clock delta so a backgrounded
-  // tab doesn't drift, and clamps / loops at the end of the track.
-  useEffect(() => {
-    if (!isPlaying) return;
-    let raf = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      setElapsed((prev) => {
-        const next = prev + dt;
-        if (next >= NOW_PLAYING.durationSec) {
-          return repeat ? next - NOW_PLAYING.durationSec : NOW_PLAYING.durationSec;
-        }
-        return next;
-      });
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [isPlaying, repeat]);
-
-  // Stop at the very end when not repeating.
-  useEffect(() => {
-    if (!repeat && elapsed >= NOW_PLAYING.durationSec) setIsPlaying(false);
-  }, [elapsed, repeat]);
+export function NowPlaying({ onClose }: { onClose: () => void }) {
+  const { state, current, toggle, next, prev, toggleShuffle, cycleRepeat, toggleLike } = usePlayer();
+  const nav = useNav();
+  const reduce = useReducedMotion();
+  const controls = useDragControls();
+  const [view, setView] = useState<"art" | "lyrics">("art");
+  const [queueOpen, setQueueOpen] = useState(false);
+  const liked = state.liked.includes(current.id);
+  const artist = getArtist(current.artistId);
+  const upcoming = state.queue.length - state.index - 1;
 
   return (
-    <section className="relative flex h-full min-h-[100dvh] flex-col overflow-hidden bg-[#0a090c] text-paper">
-      {/* keyframes: album float + perpetual waveform pulse. Reduced-motion safe. */}
-      <style>{`
-        @keyframes waves-float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes waves-pulse {
-          0%, 100% { transform: scaleY(0.82); }
-          50% { transform: scaleY(1); }
-        }
-        .waves-art { animation: waves-float 7s ease-in-out infinite; will-change: transform; }
-        .waves-bar {
-          transform-origin: center;
-          animation: waves-pulse 1.5s ease-in-out infinite;
-          will-change: transform;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .waves-art, .waves-bar { animation: none !important; }
-        }
-      `}</style>
-
-      {/* faint top hairline in accent — flat editorial marker, not a glow */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`,
-          opacity: 0.5,
-        }}
-      />
-
-      {/* ---- top bar ---- */}
-      <header className="flex items-center justify-between px-6 pt-5">
-        <button
-          type="button"
-          aria-label="Collapse player"
-          className="grid h-9 w-9 place-items-center rounded-full text-bone ring-1 ring-white/10 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
+    <motion.section
+      aria-label="Now playing"
+      className="absolute inset-0 z-50 flex flex-col overflow-hidden"
+      initial={reduce ? { opacity: 0 } : { y: "100%" }}
+      animate={reduce ? { opacity: 1 } : { y: 0 }}
+      exit={reduce ? { opacity: 0 } : { y: "100%" }}
+      transition={reduce ? { duration: 0.15 } : { type: "spring", stiffness: 300, damping: 34, mass: 0.9 }}
+      drag="y"
+      dragListener={false}
+      dragControls={controls}
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={{ top: 0, bottom: 1 }}
+      onDragEnd={(_, info) => {
+        if (info.offset.y > 140 || info.velocity.y > 700) onClose();
+      }}
+    >
+      {/* palette background: registered custom properties make this gradient interpolate */}
+      <div className="wv-np-bg absolute inset-0" />
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={current.albumId}
+          className="pointer-events-none absolute -inset-x-1/4 -top-[12%] h-[70%]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduce ? 0 : 1.1, ease: [0.22, 1, 0.36, 1] }}
+          style={{ filter: "blur(70px) saturate(1.15)" }}
         >
-          <ChevronDown size={18} strokeWidth={1.75} />
-        </button>
+          <AlbumCover albumId={current.albumId} className="h-full w-full" />
+        </motion.div>
+      </AnimatePresence>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/35" />
 
-        <div className="flex flex-col items-center">
-          <span className="font-mono text-[9px] uppercase tracking-[0.28em] text-ash">
-            Playing From
-          </span>
-          <span className="mt-1 text-[13px] font-medium tracking-tight text-paper">
-            {PLAYLIST}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          aria-label="More options"
-          className="grid h-9 w-9 place-items-center rounded-full text-bone ring-1 ring-white/10 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
-        >
-          <MoreVertical size={18} strokeWidth={1.75} />
-        </button>
-      </header>
-
-      {/* ---- stage: artwork ---- */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-6">
-        <div className="waves-art relative w-full max-w-[300px]">
-          {/* double-bezel: outer tray + inner core */}
-          <div className="rounded-[26px] bg-white/[0.04] p-2 ring-1 ring-white/10">
-            <div className="relative overflow-hidden rounded-[18px] ring-1 ring-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
-              <img
-                src={`https://picsum.photos/seed/${NOW_PLAYING.seed}/600/600`}
-                width={600}
-                height={600}
-                alt={`Album artwork for ${NOW_PLAYING.title} by ${NOW_PLAYING.artist}`}
-                className="block aspect-square w-full object-cover"
-              />
-              {/* editorial corner tag */}
-              <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.2em] text-paper/90 backdrop-blur-sm">
-                Lossless
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ---- meta + waveform + controls + up next ---- */}
-      <div className="px-6 pb-5">
-        {/* title / artist / like */}
-        <div className="flex items-end justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="truncate text-[26px] font-semibold leading-tight tracking-tight text-paper">
-              {NOW_PLAYING.title}
-            </h1>
-            <p className="mt-0.5 truncate text-[15px] text-ash">
-              {NOW_PLAYING.artist}
+      <div className="relative flex min-h-0 flex-1 flex-col px-6" style={{ paddingTop: "calc(var(--safe-top) + 2px)" }}>
+        {/* drag handle + header */}
+        <div className="flex shrink-0 touch-none items-center justify-between py-2" onPointerDown={(e) => controls.start(e)}>
+          <button type="button" onClick={onClose} aria-label="Minimise player" className="grid h-10 w-10 -ml-2 place-items-center rounded-full text-white active:bg-white/10">
+            <ChevronDown className="h-6 w-6" strokeWidth={STROKE} />
+          </button>
+          <div className="min-w-0 px-2 text-center">
+            <p className="flex items-center justify-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-white/60">
+              <Equalizer playing={state.playing} color="rgba(255,255,255,0.7)" />
+              Playing from
             </p>
+            <p className="truncate text-[13.5px] font-semibold text-white">{state.context}</p>
           </div>
-          <button
-            type="button"
-            aria-label={liked ? "Remove from Liked" : "Add to Liked"}
-            aria-pressed={liked}
-            onClick={() => setLiked((v) => !v)}
-            className="mb-1 grid h-10 w-10 shrink-0 place-items-center rounded-full ring-1 ring-white/10 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
-          >
-            <Heart
-              size={19}
-              strokeWidth={1.75}
-              style={liked ? { color: ACCENT, fill: ACCENT } : { color: "#cbcbc2" }}
-            />
-          </button>
+          <div className="h-10 w-10" aria-hidden />
         </div>
 
-        {/* waveform scrubber */}
-        <div className="mt-5">
-          <Waveform
-            elapsed={elapsed}
-            duration={NOW_PLAYING.durationSec}
-            onSeek={(s) => setElapsed(s)}
-          />
-        </div>
-
-        {/* transport controls */}
-        <div className="mt-4 flex items-center justify-between">
-          <button
-            type="button"
-            aria-label="Shuffle"
-            aria-pressed={shuffle}
-            onClick={() => setShuffle((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-full transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
-            style={{ color: shuffle ? ACCENT : "#7f7f78" }}
-          >
-            <Shuffle size={19} strokeWidth={1.9} />
-          </button>
-
-          <button
-            type="button"
-            aria-label="Previous track"
-            className="grid h-11 w-11 place-items-center rounded-full text-paper transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
-          >
-            <SkipBack size={24} strokeWidth={1.9} fill="currentColor" />
-          </button>
-
-          <button
-            type="button"
-            aria-label={isPlaying ? "Pause" : "Play"}
-            aria-pressed={isPlaying}
-            onClick={() => setIsPlaying((v) => !v)}
-            className="grid h-16 w-16 place-items-center rounded-full text-[#0a090c] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.94]"
-            style={{ backgroundColor: ACCENT }}
-          >
-            {isPlaying ? (
-              <Pause size={26} strokeWidth={0} fill="currentColor" />
-            ) : (
-              <Play size={26} strokeWidth={0} fill="currentColor" className="translate-x-[2px]" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            aria-label="Next track"
-            className="grid h-11 w-11 place-items-center rounded-full text-paper transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
-          >
-            <SkipForward size={24} strokeWidth={1.9} fill="currentColor" />
-          </button>
-
-          <button
-            type="button"
-            aria-label="Repeat"
-            aria-pressed={repeat}
-            onClick={() => setRepeat((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-full transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90"
-            style={{ color: repeat ? ACCENT : "#7f7f78" }}
-          >
-            <Repeat size={19} strokeWidth={1.9} />
-          </button>
-        </div>
-
-        {/* up next peek */}
-        <div className="mt-6 border-t border-white/[0.07] pt-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-[0.28em] text-ash">
-              Up Next
-            </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.28em] text-dim">
-              {UP_NEXT.length} tracks
-            </span>
-          </div>
-
-          <ul className="mt-3 space-y-3">
-            {UP_NEXT.map((t) => (
-              <li key={t.seed} className="flex items-center gap-3">
-                <img
-                  src={`https://picsum.photos/seed/${t.seed}/120/120`}
-                  width={120}
-                  height={120}
-                  alt={`Album artwork for ${t.title} by ${t.artist}`}
-                  className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
+        {/* artwork / lyrics stage */}
+        <div className="relative mt-3 aspect-square w-full shrink-0">
+          <AnimatePresence initial={false} mode="popLayout">
+            {view === "art" ? (
+              <motion.div
+                key={`art-${current.id}`}
+                className="absolute inset-0 touch-none"
+                onPointerDown={(e) => controls.start(e)}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: state.playing ? 1 : 0.88 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={reduce ? { duration: 0 } : SPRING}
+              >
+                <AlbumCover
+                  albumId={current.albumId}
+                  className="h-full w-full rounded-[22px] shadow-[0_40px_70px_-28px_rgba(0,0,0,0.8)]"
                 />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-medium tracking-tight text-paper">
-                    {t.title}
-                  </p>
-                  <p className="truncate text-[12px] text-ash">{t.artist}</p>
-                </div>
-                <span
-                  aria-hidden
-                  className="flex h-4 items-end gap-[2px]"
+              </motion.div>
+            ) : (
+              <motion.div
+                key="lyrics"
+                className="absolute inset-0"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                transition={{ duration: reduce ? 0 : 0.25 }}
+              >
+                <Lyrics key={current.id} track={current} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* title row */}
+        <div className="mt-7 flex shrink-0 items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={current.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: reduce ? 0 : 0.2 }}
+              >
+                <h2 className="wv-display truncate text-[25px] font-bold leading-tight tracking-[-0.035em] text-white">{current.title}</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    nav.push({ kind: "artist", id: artist.id });
+                  }}
+                  className="mt-0.5 block max-w-full truncate text-left text-[16px] text-white/65 active:text-white"
                 >
-                  <span className="w-[2px] rounded-full bg-white/15" style={{ height: "40%" }} />
-                  <span className="w-[2px] rounded-full bg-white/15" style={{ height: "80%" }} />
-                  <span className="w-[2px] rounded-full bg-white/15" style={{ height: "55%" }} />
-                </span>
-              </li>
-            ))}
-          </ul>
+                  {artist.name}
+                </button>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          <motion.button
+            type="button"
+            onClick={() => toggleLike(current.id)}
+            aria-label={liked ? "Remove from Liked Songs" : "Add to Liked Songs"}
+            aria-pressed={liked}
+            whileTap={{ scale: 0.8 }}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
+          >
+            <motion.span key={liked ? "on" : "off"} initial={reduce || !liked ? false : { scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 14 }}>
+              <Heart
+                className="h-[26px] w-[26px] transition-colors duration-500"
+                strokeWidth={STROKE}
+                style={{ color: liked ? "var(--pal-accent)" : "rgba(255,255,255,0.8)" }}
+                fill={liked ? "currentColor" : "none"}
+              />
+            </motion.span>
+          </motion.button>
+        </div>
+
+        <div className="mt-4 shrink-0">
+          <WaveScrubber trackId={current.id} duration={current.duration} />
+        </div>
+
+        {/* transport */}
+        <div className="mt-3 flex shrink-0 items-center justify-between">
+          <IconToggle on={state.shuffle} onClick={toggleShuffle} label={state.shuffle ? "Shuffle on" : "Shuffle off"}>
+            <Shuffle className="h-[22px] w-[22px]" strokeWidth={STROKE} />
+          </IconToggle>
+          <motion.button type="button" whileTap={{ scale: 0.86 }} onClick={prev} aria-label="Previous" className="grid h-14 w-14 place-items-center text-white">
+            <SkipBack className="h-8 w-8" fill="currentColor" strokeWidth={STROKE} />
+          </motion.button>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.92 }}
+            onClick={toggle}
+            aria-label={state.playing ? "Pause" : "Play"}
+            className="wv-pal-bg grid h-[74px] w-[74px] place-items-center rounded-full shadow-[0_18px_36px_-16px_rgba(0,0,0,0.7)]"
+            style={{ color: "var(--pal-ink)" }}
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={state.playing ? "pause" : "play"}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                transition={{ duration: reduce ? 0 : 0.15 }}
+              >
+                {state.playing ? (
+                  <Pause className="h-8 w-8" fill="currentColor" strokeWidth={STROKE} />
+                ) : (
+                  <Play className="ml-1 h-8 w-8" fill="currentColor" strokeWidth={STROKE} />
+                )}
+              </motion.span>
+            </AnimatePresence>
+          </motion.button>
+          <motion.button type="button" whileTap={{ scale: 0.86 }} onClick={next} aria-label="Next" className="grid h-14 w-14 place-items-center text-white">
+            <SkipForward className="h-8 w-8" fill="currentColor" strokeWidth={STROKE} />
+          </motion.button>
+          <IconToggle on={state.repeat !== "off"} onClick={cycleRepeat} label={`Repeat ${state.repeat}`}>
+            {state.repeat === "one" ? <Repeat1 className="h-[22px] w-[22px]" strokeWidth={STROKE} /> : <Repeat className="h-[22px] w-[22px]" strokeWidth={STROKE} />}
+          </IconToggle>
+        </div>
+
+        {/* secondary */}
+        <div className="mt-auto flex shrink-0 items-center justify-between pb-[calc(var(--safe-bottom)+6px)] pt-3">
+          <Pill on={view === "lyrics"} onClick={() => setView((v) => (v === "art" ? "lyrics" : "art"))} label="Lyrics">
+            <MicVocal className="h-4 w-4" strokeWidth={STROKE} />
+          </Pill>
+          <Pill on={queueOpen} onClick={() => setQueueOpen(true)} label={upcoming > 0 ? `Up next · ${upcoming}` : "Up next"}>
+            <ListMusic className="h-4 w-4" strokeWidth={STROKE} />
+          </Pill>
         </div>
       </div>
-    </section>
+
+      <AnimatePresence>{queueOpen && <QueueSheet onClose={() => setQueueOpen(false)} />}</AnimatePresence>
+    </motion.section>
+  );
+}
+
+function IconToggle({ on, onClick, label, children }: { on: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.88 }}
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={on}
+      className="relative grid h-11 w-11 place-items-center transition-colors duration-500"
+      style={{ color: on ? "var(--pal-accent)" : "rgba(255,255,255,0.62)" }}
+    >
+      {children}
+      <span
+        className="absolute bottom-0.5 h-1 w-1 rounded-full transition-opacity"
+        style={{ background: "var(--pal-accent)", opacity: on ? 1 : 0 }}
+      />
+    </motion.button>
+  );
+}
+
+function Pill({ on, onClick, label, children }: { on: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className="flex h-9 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold transition active:scale-95"
+      style={{ background: on ? "var(--pal-accent)" : "rgba(255,255,255,0.1)", color: on ? "var(--pal-ink)" : "#fff" }}
+    >
+      {children}
+      {label}
+    </button>
   );
 }

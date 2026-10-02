@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
@@ -38,7 +38,7 @@ export function Services() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1680px] flex-col gap-6 px-2 pb-24 md:px-4 lg:gap-0 lg:pb-[30vh]">
+      <div className="flex w-full flex-col gap-6 px-2 pb-24 md:px-3 lg:gap-0 lg:pb-[30vh]">
         {DISCIPLINE_ORDER.map((key, i) => (
           <ServiceCard key={key} k={key} i={i} />
         ))}
@@ -66,7 +66,7 @@ function ServiceCard({ k, i }: { k: DisciplineKey; i: number }) {
     >
       <div
         className={cn(
-          "grid gap-10 border border-dashed px-4 py-8 md:px-8 md:py-10 lg:min-h-[calc(100dvh-8.5rem)] lg:grid-cols-12 lg:gap-8 lg:px-10",
+          "grid gap-10 border border-dashed px-4 py-8 md:px-8 md:py-10 lg:min-h-[calc(100dvh-8.5rem)] lg:grid-cols-12 lg:items-center lg:gap-8 lg:px-8 lg:py-8",
           light
             ? "border-carbon/25 bg-mist text-carbon"
             : "border-paper/20 bg-graphite text-paper",
@@ -74,7 +74,7 @@ function ServiceCard({ k, i }: { k: DisciplineKey; i: number }) {
         )}
       >
         {/* copy column */}
-        <div className="flex flex-col lg:col-span-5">
+        <div className="flex flex-col lg:col-span-4 lg:self-stretch">
           <div className="grid grid-cols-[3.25rem_1fr] items-baseline gap-x-3 md:grid-cols-[5rem_1fr]">
             <span className="font-plex tabular text-xl md:text-2xl">
               {String(i + 1).padStart(2, "0")}
@@ -173,10 +173,10 @@ function ServiceCard({ k, i }: { k: DisciplineKey; i: number }) {
         </div>
 
         {/* visual column — the live build sits in a dashed frame */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-8">
           <div
             className={cn(
-              "frame-dashed h-full p-1.5 md:p-2",
+              "frame-dashed p-1.5 md:p-2",
               light ? "text-carbon" : "text-paper"
             )}
           >
@@ -194,14 +194,29 @@ function ServiceCard({ k, i }: { k: DisciplineKey; i: number }) {
   );
 }
 
+/* scrolling inside the preview only makes sense with a mouse/trackpad — on
+   touch it would trap the page scroll */
+function useFinePointer() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia("(pointer: fine)");
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(pointer: fine)").matches,
+    () => false
+  );
+}
+
 function WebVisual({ demo }: { demo: Demo }) {
+  const fine = useFinePointer();
   return (
-    <Link
-      href={demo.route}
-      className="group relative flex h-full min-h-[240px] flex-col overflow-hidden bg-carbon outline-none focus-visible:ring-2 focus-visible:ring-volt"
-      aria-label={`${demo.brand} — ${demo.tagline.en}`}
-    >
-      <div className="flex items-center gap-3 border-b border-paper/10 px-3 py-2">
+    <div className="group relative flex flex-col overflow-hidden bg-carbon">
+      <Link
+        href={demo.route}
+        className="flex items-center gap-3 border-b border-paper/10 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-volt"
+        aria-label={`${demo.brand} — ${demo.tagline.en}`}
+      >
         <span className="flex gap-1.5" aria-hidden>
           <span className="h-2 w-2 rounded-full bg-paper/20" />
           <span className="h-2 w-2 rounded-full bg-paper/20" />
@@ -212,21 +227,27 @@ function WebVisual({ demo }: { demo: Demo }) {
           <span className="h-1.5 w-1.5 animate-blink rounded-full bg-volt" aria-hidden />
           LIVE
         </span>
-      </div>
-      <div className="relative aspect-[16/10] w-full flex-1">
+      </Link>
+      {/* 16:10 = the 1440×900 design resolution, so the site fits uncropped */}
+      <div className="relative aspect-[16/10] w-full" data-lenis-prevent>
         <LivePreview
           key={demo.slug}
           src={demo.route}
           title={demo.brand}
           accent={demo.accent}
           rootMargin="700px 0px"
+          interactive={fine}
         />
-        <span className="ui absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-paper px-3 py-2 text-carbon opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <Link
+          href={demo.route}
+          tabIndex={-1}
+          className="ui absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-paper px-3 py-2 text-carbon opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        >
           {demo.brand}
           <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
-        </span>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 

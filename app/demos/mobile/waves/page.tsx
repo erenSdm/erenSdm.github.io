@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { NowPlaying } from "@/components/demos/waves/NowPlaying";
 import { DeviceShell } from "@/components/demos/chat/DeviceShell";
+import { WavesApp } from "@/components/demos/waves/WavesApp";
 
 export const metadata: Metadata = {
-  title: "WAVES — Now Playing",
-  description: "WAVES — a mobile music player with a live waveform scrubber and queue.",
+  title: "WAVES — Music",
+  description:
+    "WAVES — a dark music app that takes its colour from the artwork: home shelves, search, library, and a full player with waveform scrubbing, synced lyrics and an editable queue.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -16,7 +17,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0A090C",
+  themeColor: "#131211",
   colorScheme: "dark",
 };
 
@@ -27,8 +28,8 @@ export default async function Page({
 }) {
   const { embed } = await searchParams;
   return (
-    <DeviceShell embed={embed === "1"} background="#0A090C">
-      <NowPlaying />
+    <DeviceShell embed={embed === "1"} background="#131211">
+      <WavesApp />
     </DeviceShell>
   );
 }

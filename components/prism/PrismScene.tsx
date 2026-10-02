@@ -3,351 +3,498 @@
 import { useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, RoundedBox } from "@react-three/drei";
-import {
-  DESKTOP_POSES,
-  MOBILE_POSES,
-  POSE_KEYS,
-  STAGES,
-  type Pose,
-  type ScrollState,
-} from "./stages";
+import { Environment, Lightformer, MeshTransmissionMaterial, RoundedBox } from "@react-three/drei";
 
-const SLICES = 5;
-const W = 1.0;
-const H = 2.25; // 4:9 — the monolith ratio
-const D = 0.42;
-const SLICE_H = H / SLICES;
+export type HeroState = {
+  /** 0 = hero fully in view, 1 = scrolled past the hero */
+  p: number;
+  /** pointer, −1..1 */
+  mx: number;
+  my: number;
+};
 
-const LIME = new THREE.Color("#ccff00");
-const WHITE = new THREE.Color("#ffffff");
-const INK = new THREE.Color("#0a0a0a");
-const CLEAR_ATT = new THREE.Color("#f4fbff");
-const LIME_ATT = new THREE.Color("#d8ff4a");
-const BEAM_CORE = new THREE.Color("#f4ffc8").multiplyScalar(2.2);
+/* ------------------------------------------------------------------ geometry */
 
-/** Deterministic per-shard randomness, −1..1. */
-function seeded(i: number, k: number) {
-  const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
-  return (s - Math.floor(s)) * 2 - 1;
-}
+const S = 1.3; // cube edge
+const H = S / 2;
+const RADIUS = 0.05;
 
+/* ------------------------------------------------------------------ optics */
+
+const RAYS = 22;
+/** n(λ) from red (i=0) to violet (i=RAYS-1). Slightly exaggerated so the fan reads on screen. */
+const IOR_RED = 1.495;
+const IOR_VIOLET = 1.66;
+const FAN_LEN = 9;
 /**
- * Draw this mesh only into three.js's transmission buffer (what glass refracts), never on screen.
- * The renderer applies material state after onBeforeRender, so toggling colorWrite here is enough.
+ * A cube has parallel faces, so physically the exit rays leave almost parallel (tiny fan).
+ * This adds an artistic angular spread on exit, ordered red → violet like a real prism, on top of the traced path.
  */
-function transmissionOnly(
-  renderer: THREE.WebGLRenderer,
-  _scene: THREE.Scene,
-  _camera: THREE.Camera,
-  _geometry: THREE.BufferGeometry,
-  material: THREE.Material,
-) {
-  material.colorWrite = renderer.getRenderTarget() !== null;
+const FAN_SPREAD = 0.5;
+// steep, from the upper left: clears the headline column
+const BEAM_DIR = new THREE.Vector2(0.72, -1).normalize();
+const BEAM_AIM_Y = 0.12;
+
+type V2 = THREE.Vector2;
+
+/** Visible-spectrum colour for t∈[0,1] (0 = 680nm red, 1 = 400nm violet). */
+function spectrum(t: number, out: THREE.Color) {
+  const wl = 680 - t * 280;
+  let r = 0, g = 0, b = 0;
+  if (wl < 440) { r = -(wl - 440) / 40; b = 1; }
+  else if (wl < 490) { g = (wl - 440) / 50; b = 1; }
+  else if (wl < 510) { g = 1; b = -(wl - 510) / 20; }
+  else if (wl < 580) { r = (wl - 510) / 70; g = 1; }
+  else if (wl < 645) { r = 1; g = -(wl - 645) / 65; }
+  else r = 1;
+  const edge = wl < 420 ? 0.4 + (0.6 * (wl - 400)) / 20 : wl > 660 ? 0.4 + (0.6 * (680 - wl)) / 20 : 1;
+  return out.setRGB(r * edge, g * edge, b * edge);
 }
 
-function gradientTexture(kind: "core" | "beam") {
-  const c = document.createElement("canvas");
-  c.width = kind === "core" ? 64 : 256;
-  c.height = 256;
-  const ctx = c.getContext("2d")!;
-  if (kind === "core") {
-    ctx.translate(32, 128);
-    ctx.scale(0.25, 1);
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 128);
-    g.addColorStop(0, "rgba(255,255,255,1)");
-    g.addColorStop(0.4, "rgba(255,255,255,0.35)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(-128, -128, 256, 256);
-  } else {
-    // soft along both axes: bright centre line, fades towards the ends
-    const g = ctx.createLinearGradient(0, 0, 0, 256);
-    g.addColorStop(0, "rgba(255,255,255,0)");
-    g.addColorStop(0.5, "rgba(255,255,255,1)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.globalCompositeOperation = "destination-in";
-    const h = ctx.createLinearGradient(0, 0, 256, 0);
-    h.addColorStop(0, "rgba(255,255,255,0)");
-    h.addColorStop(0.35, "rgba(255,255,255,1)");
-    h.addColorStop(0.65, "rgba(255,255,255,1)");
-    h.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = h;
-    ctx.fillRect(0, 0, 256, 256);
+/** Ray vs axis-aligned square [-H,H]². Returns near/far t and outward normals. */
+function slab(o: V2, d: V2) {
+  let tN = -Infinity, tF = Infinity;
+  const nN = new THREE.Vector2(), nF = new THREE.Vector2();
+  for (const ax of ["x", "y"] as const) {
+    if (Math.abs(d[ax]) < 1e-9) {
+      if (Math.abs(o[ax]) > H) return null;
+      continue;
+    }
+    let t1 = (-H - o[ax]) / d[ax], t2 = (H - o[ax]) / d[ax];
+    let s1 = -1, s2 = 1;
+    if (t1 > t2) { [t1, t2] = [t2, t1]; [s1, s2] = [s2, s1]; }
+    if (t1 > tN) { tN = t1; nN.set(0, 0); nN[ax] = s1; }
+    if (t2 < tF) { tF = t2; nF.set(0, 0); nF[ax] = s2; }
   }
+  if (tN > tF || tF < 0) return null;
+  return { tN, tF, nN, nF };
+}
+
+/** Snell refraction. n faces against d. Returns null on total internal reflection. */
+function refract(d: V2, n: V2, eta: number) {
+  const cosi = -d.dot(n);
+  const k = 1 - eta * eta * (1 - cosi * cosi);
+  if (k < 0) return null;
+  return d.clone().multiplyScalar(eta).add(n.clone().multiplyScalar(eta * cosi - Math.sqrt(k))).normalize();
+}
+
+const reflect = (d: V2, n: V2) => d.clone().sub(n.clone().multiplyScalar(2 * d.dot(n)));
+
+/** Outward normal of the square face a local point sits on. */
+function faceNormal(q: V2) {
+  return Math.abs(q.x) > Math.abs(q.y)
+    ? new THREE.Vector2(Math.sign(q.x), 0)
+    : new THREE.Vector2(0, Math.sign(q.y));
+}
+
+/* ------------------------------------------------------------------ shaders */
+
+const lightVertex = /* glsl */ `
+  attribute vec3 aColor;
+  attribute float aA;
+  attribute float aS;
+  attribute float aK;
+  varying vec3 vColor;
+  varying float vA;
+  varying float vS;
+  varying float vK;
+  void main() {
+    vColor = aColor; vA = aA; vS = aS; vK = aK;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+const lightFragment = /* glsl */ `
+  varying vec3 vColor;
+  varying float vA;
+  varying float vS;
+  varying float vK;
+  void main() {
+    float f = pow(max(sin(3.14159265 * vS), 0.0), vK);
+    gl_FragColor = vec4(vColor, vA * f);
+  }
+`;
+
+/** Screen position from clip space, so the backdrop lines up on screen and inside the glass's refraction buffer. */
+const screenVertex = /* glsl */ `
+  varying vec4 vClip;
+  void main() {
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vClip = gl_Position;
+  }
+`;
+
+/** Near-black studio with a faint cool lift behind the cube. Authored in sRGB, opaque → the glass refracts it. */
+const bgFragment = /* glsl */ `
+  varying vec4 vClip;
+  uniform float uAspect;
+  uniform vec2 uGlow;
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  void main() {
+    vec2 uv = vClip.xy / vClip.w * 0.5 + 0.5;
+    vec3 col = mix(vec3(0.043, 0.047, 0.058), vec3(0.03, 0.032, 0.04), uv.y);
+    vec2 d = (uv - uGlow) * vec2(uAspect, 1.0);
+    col += vec3(0.05, 0.055, 0.075) * exp(-dot(d, d) * 3.0);
+    vec2 v = uv - 0.5;
+    col *= 1.0 - dot(v, v) * 0.6;
+    col += (hash(uv * 1000.0) - 0.5) * 0.008;
+    gl_FragColor = vec4(pow(max(col, 0.0), vec3(2.2)), 1.0);
+    #include <colorspace_fragment>
+  }
+`;
+
+function radialTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.18, "rgba(255,255,255,0.55)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
+/* ------------------------------------------------------------------ light geometry */
+
+const MAX_VERTS = 600;
+
+class LightBuilder {
+  pos = new Float32Array(MAX_VERTS * 3);
+  col = new Float32Array(MAX_VERTS * 3);
+  a = new Float32Array(MAX_VERTS);
+  s = new Float32Array(MAX_VERTS);
+  k = new Float32Array(MAX_VERTS);
+  n = 0;
+  reset() {
+    this.n = 0;
+  }
+  v(x: number, y: number, c: THREE.Color, a: number, s: number, k: number) {
+    if (this.n >= MAX_VERTS) return;
+    const i = this.n++;
+    this.pos[i * 3] = x;
+    this.pos[i * 3 + 1] = y;
+    this.pos[i * 3 + 2] = 0;
+    this.col[i * 3] = c.r;
+    this.col[i * 3 + 1] = c.g;
+    this.col[i * 3 + 2] = c.b;
+    this.a[i] = a;
+    this.s[i] = s;
+    this.k[i] = k;
+  }
+  /** Soft line quad A→B of width w. */
+  seg(A: V2, B: V2, w: number, c: THREE.Color, aA: number, aB: number, k: number) {
+    const d = B.clone().sub(A).normalize();
+    const nx = -d.y * w * 0.5, ny = d.x * w * 0.5;
+    this.v(A.x - nx, A.y - ny, c, aA, 0, k);
+    this.v(B.x - nx, B.y - ny, c, aB, 0, k);
+    this.v(B.x + nx, B.y + ny, c, aB, 1, k);
+    this.v(A.x - nx, A.y - ny, c, aA, 0, k);
+    this.v(B.x + nx, B.y + ny, c, aB, 1, k);
+    this.v(A.x + nx, A.y + ny, c, aA, 1, k);
+  }
+  /** Strip between two adjacent rays (near1→far1, near2→far2). */
+  strip(n1: V2, f1: V2, n2: V2, f2: V2, c1: THREE.Color, c2: THREE.Color, an: number, af: number, s1: number, s2: number, k: number) {
+    this.v(n1.x, n1.y, c1, an, s1, k);
+    this.v(f1.x, f1.y, c1, af, s1, k);
+    this.v(f2.x, f2.y, c2, af, s2, k);
+    this.v(n1.x, n1.y, c1, an, s1, k);
+    this.v(f2.x, f2.y, c2, af, s2, k);
+    this.v(n2.x, n2.y, c2, an, s2, k);
+  }
+}
+
+/* ------------------------------------------------------------------ scene */
+
 type Props = {
-  state: RefObject<ScrollState>;
+  state: RefObject<HeroState>;
   reduced: boolean;
   lowPower: boolean;
 };
 
 export default function PrismScene({ state: stateRef, reduced, lowPower }: Props) {
   const root = useRef<THREE.Group>(null);
-  const spinner = useRef<THREE.Group>(null);
-  const stretch = useRef<THREE.Group>(null);
-  const shards = useRef<(THREE.Group | null)[]>([]);
-  const glassMats = useRef<(THREE.MeshPhysicalMaterial | null)[]>([]);
-  const lineMats = useRef<(THREE.LineBasicMaterial | null)[]>([]);
-  const core = useRef<THREE.Mesh>(null);
-  const coreMat = useRef<THREE.MeshBasicMaterial>(null);
-  const beam = useRef<THREE.Group>(null);
-  const beamCore = useRef<THREE.Mesh>(null);
-  const beamGlowMat = useRef<THREE.MeshBasicMaterial>(null);
-  const backdropMat = useRef<THREE.MeshBasicMaterial>(null);
-  const haloMat = useRef<THREE.MeshBasicMaterial>(null);
+  const tilt = useRef<THREE.Group>(null);
+  const spin = useRef<THREE.Group>(null);
+  const bgMesh = useRef<THREE.Mesh>(null);
+  const bgMat = useRef<THREE.ShaderMaterial>(null);
+  const lightGeo = useRef<THREE.BufferGeometry>(null);
+  const hotIn = useRef<THREE.Mesh>(null);
+  const hotOut = useRef<THREE.Mesh>(null);
+  const motion = useRef({ t: 0, mx: 0, my: 0, p: 0 });
+  const proj = useRef(new THREE.Vector3());
 
   const isPhone = useThree((s) => s.size.width < 768);
 
-  const cur = useRef<Pose>({ ...(isPhone ? MOBILE_POSES : DESKTOP_POSES).hero });
-  const target = useRef<Pose>({ ...(isPhone ? MOBILE_POSES : DESKTOP_POSES).hero });
-  const extra = useRef({ spin: 0, step: 0, light: 0, mx: 0, my: 0, t: 0 });
-  const tmpColor = useRef(new THREE.Color());
-
-  const edges = useMemo(
-    () => new THREE.EdgesGeometry(new THREE.BoxGeometry(W, SLICE_H, D)),
+  const builder = useMemo(() => new LightBuilder(), []);
+  const glowTex = useMemo(() => radialTexture(), []);
+  const bgUniforms = useMemo(
+    () => ({
+      uAspect: { value: 1 },
+      uGlow: { value: new THREE.Vector2(0.65, 0.5) },
+    }),
     [],
   );
-  const coreTex = useMemo(() => gradientTexture("core"), []);
-  const beamTex = useMemo(() => gradientTexture("beam"), []);
+  const tmp = useMemo(
+    () => ({
+      white: new THREE.Color(1, 1, 1),
+      c1: new THREE.Color(),
+      c2: new THREE.Color(),
+      hot: new THREE.Color("#fff6ee"),
+    }),
+    [],
+  );
 
   useFrame((frame, rawDt) => {
-    const state = stateRef.current;
+    const st = stateRef.current;
     const dt = Math.min(rawDt, 1 / 20);
-    const poses = isPhone ? MOBILE_POSES : DESKTOP_POSES;
-    const A = poses[STAGES[state.a]];
-    const B = poses[STAGES[state.b]];
-    const t = target.current;
-    for (const k of POSE_KEYS) t[k] = A[k] + (B[k] - A[k]) * state.w;
-
-    const c = cur.current;
-    const e = extra.current;
-    const lambda = reduced ? 1000 : 3.2;
-    for (const k of POSE_KEYS) c[k] = THREE.MathUtils.damp(c[k], t[k], lambda, dt);
-    e.step = THREE.MathUtils.damp(e.step, state.step, reduced ? 1000 : 4, dt);
-    e.light = THREE.MathUtils.damp(e.light, state.light, reduced ? 1000 : 5, dt);
+    const m = motion.current;
     if (!reduced) {
-      e.mx = THREE.MathUtils.damp(e.mx, state.mx, 2.5, dt);
-      e.my = THREE.MathUtils.damp(e.my, state.my, 2.5, dt);
-      e.spin += c.spin * dt;
-      // Stages with ~no spin square up to the nearest face so their pose is deterministic.
-      const settle = 1 - Math.min(1, c.spin / 0.08);
-      if (settle > 0) {
-        e.spin = THREE.MathUtils.damp(e.spin, Math.round(e.spin / Math.PI) * Math.PI, 2.5 * settle, dt);
-      }
-      e.t += dt;
+      m.t += dt;
+      m.mx = THREE.MathUtils.damp(m.mx, st.mx, 2.2, dt);
+      m.my = THREE.MathUtils.damp(m.my, st.my, 2.2, dt);
     }
+    m.p = reduced ? st.p : THREE.MathUtils.damp(m.p, st.p, 6, dt);
+    const p = m.p;
+    const t = m.t;
 
     const vp = frame.viewport;
-    const float = reduced ? 0 : Math.sin(e.t * 0.8) * 0.06;
+    const fit = Math.min(1, vp.height / 3.6, vp.width / 2.6);
+    const baseX = isPhone ? 0 : 0.34 * (vp.width / 2);
+    const baseY = isPhone ? -0.5 * (vp.height / 2) : 0.02;
+    const scale = (isPhone ? 0.52 : 0.82) * fit;
 
+    // floating: a slow bob with a little sideways drift
     if (root.current) {
       root.current.position.set(
-        c.x * (vp.width / 2) + e.mx * 0.12,
-        c.y * (vp.height / 2) + float - e.my * 0.08,
-        c.z,
+        baseX + Math.sin(t * 0.37) * 0.03 + m.mx * 0.1 + p * vp.width * 0.06,
+        baseY + Math.sin(t * 0.8) * 0.07 - m.my * 0.06 + p * vp.height * 0.32,
+        -p * 1.2,
       );
-      // keep size sane on short or narrow viewports
-      const fit = Math.min(1, vp.height / 3.6, vp.width / 2.4);
-      root.current.scale.setScalar(c.s * fit);
+      root.current.scale.setScalar(scale * (1 - 0.25 * p));
     }
-    if (spinner.current) {
-      spinner.current.rotation.set(
-        c.rx + e.my * 0.12 + (reduced ? 0 : Math.sin(e.t * 0.5) * 0.04),
-        c.ry + e.spin + e.step * Math.PI + e.mx * 0.22,
-        c.rz,
+
+    // The cube turns about the view axis (θ) so the traced beam stays consistent with it;
+    // the tilt only adds depth (left side and top just showing) and a gentle sway.
+    const theta = 0.22 + Math.sin(t * 0.21) * 0.12 + m.mx * 0.05 + p * 0.9;
+    if (spin.current) spin.current.rotation.z = theta;
+    if (tilt.current) {
+      tilt.current.rotation.set(
+        0.26 + Math.sin(t * 0.43) * 0.05 + m.my * 0.05 + p * 0.5,
+        0.34 + Math.sin(t * 0.31) * 0.07 + m.mx * 0.08 + p * 1.1,
+        0,
       );
     }
-    if (stretch.current) stretch.current.scale.set(c.wide, 1, c.thin);
 
-    const light = e.light;
-    const col = tmpColor.current;
-    col.copy(WHITE).lerp(INK, light).lerp(LIME, Math.max(c.tint * 0.85, c.wire * 0.9));
-    if (light > 0.5 && c.wire > 0.5) col.lerp(INK, 0.55); // lime lines read poorly on white
+    // ---- analytic beam: trace each wavelength through the square in its local frame
+    const b = builder;
+    b.reset();
+    const cos = Math.cos(theta), sin = Math.sin(theta);
+    const toLocal = (v: V2) => new THREE.Vector2(v.x * cos + v.y * sin, -v.x * sin + v.y * cos);
+    const toWorld = (v: V2) => new THREE.Vector2(v.x * cos - v.y * sin, v.x * sin + v.y * cos);
 
-    for (let i = 0; i < SLICES; i++) {
-      const g = shards.current[i];
-      const sp = c.split;
-      if (g) {
-        const mid = i - (SLICES - 1) / 2;
-        const drift = reduced ? 0 : Math.sin(e.t * 0.6 + i * 1.7) * 0.06;
-        g.position.set(
-          seeded(i, 1) * 0.55 * sp,
-          mid * SLICE_H + mid * 0.2 * sp + drift * sp,
-          seeded(i, 2) * 0.7 * sp,
-        );
-        g.rotation.set(
-          seeded(i, 3) * 0.7 * sp,
-          seeded(i, 4) * 0.9 * sp + e.t * 0.15 * seeded(i, 5) * sp,
-          seeded(i, 6) * 0.5 * sp,
-        );
+    const aim = new THREE.Vector2(0, BEAM_AIM_Y);
+    const src = aim.clone().sub(BEAM_DIR.clone().multiplyScalar(9));
+    const oL = toLocal(src);
+    const dL = toLocal(BEAM_DIR);
+    const hit = slab(oL, dL);
+
+    let entryW: V2 | null = null;
+    let exitMidW: V2 | null = null;
+    if (hit) {
+      const entry = oL.clone().add(dL.clone().multiplyScalar(hit.tN));
+      const eW = toWorld(entry);
+      entryW = eW;
+      // incoming white beam: soft glow + hot core
+      b.seg(src, eW, 0.24, tmp.white, 0, 0.3, 2);
+      b.seg(src, eW, 0.03, tmp.white, 0, 1, 1);
+
+      const nears: (V2 | null)[] = [];
+      const fars: (V2 | null)[] = [];
+      const inner: (V2 | null)[] = [];
+      for (let i = 0; i < RAYS; i++) {
+        const f = i / (RAYS - 1);
+        const ior = IOR_RED + (IOR_VIOLET - IOR_RED) * f;
+        let d = refract(dL, hit.nN, 1 / ior);
+        let o = entry.clone();
+        let out: { p: V2; d: V2; din: V2 } | null = null;
+        let firstHit: V2 | null = null;
+        for (let bounce = 0; d && bounce < 4; bounce++) {
+          const h = slab(o.clone().add(d.clone().multiplyScalar(1e-4)), d);
+          if (!h) break;
+          const q = o.clone().add(d.clone().multiplyScalar(h.tF + 1e-4));
+          if (!firstHit) firstHit = q.clone();
+          const n = faceNormal(q);
+          const r = refract(d, n.clone().negate(), ior);
+          if (r) {
+            out = { p: q, d: r, din: d };
+            break;
+          }
+          d = reflect(d, n); // total internal reflection
+          o = q;
+        }
+        inner.push(firstHit ? toWorld(firstHit) : null);
+        if (out) {
+          const pw = toWorld(out.p);
+          nears.push(pw);
+          const ang = (f - 0.5) * -FAN_SPREAD;
+          const od = toWorld(out.d).rotateAround(new THREE.Vector2(), ang);
+          fars.push(pw.clone().add(od.multiplyScalar(FAN_LEN)));
+          if (i === Math.floor(RAYS / 2)) {
+            exitMidW = pw;
+            // faint internal (Fresnel) reflection off the exit face
+            const rd = reflect(out.din, faceNormal(out.p));
+            const start = out.p.clone().add(rd.clone().multiplyScalar(1e-3));
+            const rh = slab(start, rd);
+            if (rh) {
+              const rq = start.clone().add(rd.clone().multiplyScalar(rh.tF));
+              b.seg(pw, toWorld(rq), 0.05, tmp.white, 0.18, 0.03, 1.5);
+            }
+          }
+        } else {
+          nears.push(null);
+          fars.push(null);
+        }
       }
-      const gm = glassMats.current[i];
-      if (gm) {
-        gm.opacity = 1 - 0.92 * c.wire;
-        gm.attenuationColor.copy(CLEAR_ATT).lerp(LIME_ATT, c.tint);
-        gm.iridescence = 0.35 + 0.4 * c.tint;
-        gm.envMapIntensity = 2.2 - 0.7 * light;
+      // inside the glass: the bent beam, already splitting slightly
+      for (let i = 0; i < RAYS - 1; i++) {
+        const a1 = inner[i], a2 = inner[i + 1];
+        if (!a1 || !a2) continue;
+        spectrum(i / (RAYS - 1), tmp.c1).lerp(tmp.white, 0.55);
+        spectrum((i + 1) / (RAYS - 1), tmp.c2).lerp(tmp.white, 0.55);
+        b.strip(eW, a1, eW, a2, tmp.c1, tmp.c2, 0.75, 0.5, i / (RAYS - 1), (i + 1) / (RAYS - 1), 0.4);
       }
-      const lm = lineMats.current[i];
-      if (lm) {
-        lm.color.copy(col);
-        lm.opacity = 0.16 + 0.3 * light * (1 - c.wire) + 0.74 * c.wire;
+      // exit fan: continuous spectrum widening with distance, soft falloff
+      for (let i = 0; i < RAYS - 1; i++) {
+        const n1 = nears[i], n2 = nears[i + 1], f1 = fars[i], f2 = fars[i + 1];
+        if (!n1 || !n2 || !f1 || !f2) continue;
+        spectrum(i / (RAYS - 1), tmp.c1).multiplyScalar(0.85);
+        spectrum((i + 1) / (RAYS - 1), tmp.c2).multiplyScalar(0.85);
+        b.strip(n1, f1, n2, f2, tmp.c1, tmp.c2, 0.45, 0, i / (RAYS - 1), (i + 1) / (RAYS - 1), 0.9);
       }
     }
 
-    if (core.current && coreMat.current) {
-      const o = c.glow * (1 - c.split) * (1 - c.wire) * (1 - 0.6 * light);
-      coreMat.current.opacity = o * 0.75;
-      core.current.visible = o > 0.01;
+    const g = lightGeo.current;
+    if (g) {
+      for (const name of ["position", "aColor", "aA", "aS", "aK"]) {
+        (g.attributes[name] as THREE.BufferAttribute).needsUpdate = true;
+      }
+      g.setDrawRange(0, b.n);
     }
 
-    if (backdropMat.current) {
-      backdropMat.current.color.setRGB(state.bg[0], state.bg[1], state.bg[2], THREE.SRGBColorSpace);
+    // caustic hotspots where the beam meets the faces
+    const pulse = reduced ? 1 : 0.9 + 0.1 * Math.sin(t * 3.1);
+    if (hotIn.current) {
+      hotIn.current.visible = !!entryW;
+      if (entryW) hotIn.current.position.set(entryW.x, entryW.y, 0.01);
+      hotIn.current.scale.setScalar(0.26 * pulse);
+    }
+    if (hotOut.current) {
+      hotOut.current.visible = !!exitMidW;
+      if (exitMidW) hotOut.current.position.set(exitMidW.x, exitMidW.y, 0.01);
+      hotOut.current.scale.setScalar(0.3 * pulse);
     }
 
-    if (haloMat.current) haloMat.current.opacity = (0.14 + 0.22 * c.glow) * (1 - c.wire) * (1 - 0.5 * light);
-
-    if (beam.current) {
-      const b = c.beam * (1 - c.wire);
-      beam.current.visible = b > 0.01;
-      beam.current.scale.y = Math.max(b, 0.001);
-      if (beamGlowMat.current) beamGlowMat.current.opacity = 0.26 * b * (1 - 0.7 * light);
-      if (beamCore.current) beamCore.current.visible = b > 0.05 && light < 0.6;
+    if (bgMat.current && root.current) {
+      const u = bgMat.current.uniforms;
+      u.uAspect.value = vp.aspect;
+      proj.current.setFromMatrixPosition(root.current.matrixWorld).project(frame.camera);
+      u.uGlow.value.set(proj.current.x * 0.5 + 0.5, proj.current.y * 0.5 + 0.5);
     }
+    if (bgMesh.current) bgMesh.current.scale.set(vp.width * 3, vp.height * 3, 1);
   });
 
   return (
     <>
-      <Environment resolution={lowPower ? 128 : 256} frames={1}>
-        <Lightformer form="rect" intensity={2.4} color="#ffffff" position={[0, 5, -2]} scale={[10, 2, 1]} rotation-x={Math.PI / 2} />
-        <Lightformer form="rect" intensity={4} color="#ffffff" position={[-5, 1, 1]} scale={[0.6, 8, 1]} rotation-y={Math.PI / 2} />
-        <Lightformer form="rect" intensity={3} color="#ffffff" position={[5, -1, 1]} scale={[0.4, 8, 1]} rotation-y={-Math.PI / 2} />
-        <Lightformer form="rect" intensity={2.2} color="#ccff00" position={[2, -4, 3]} scale={[6, 0.6, 1]} rotation-x={-Math.PI / 3} />
-        <Lightformer form="ring" intensity={1.5} color="#bfe8ff" position={[-2, 2, 5]} scale={2} />
+      <Environment resolution={lowPower ? 128 : 512} frames={1}>
+        {/* dark room: the glass reads through its edges and highlights, not a bright fill */}
+        <color attach="background" args={["#0d0f14"]} />
+        {/* overhead softbox: top face and a crisp rim along the top edges */}
+        <Lightformer form="rect" intensity={6} color="#eef2ff" position={[0, 5, -0.5]} scale={[6, 3, 1]} rotation-x={Math.PI / 2} />
+        <Lightformer form="rect" intensity={14} color="#ffffff" position={[0, 4, -3]} scale={[8, 0.3, 1]} rotation-x={Math.PI / 2.6} />
+        {/* key side: the beam comes from the upper left */}
+        <Lightformer form="rect" intensity={10} color="#ffffff" position={[-5, 1, 0.5]} scale={[0.5, 6, 1]} rotation-y={Math.PI / 2} />
+        {/* spectral side, right: tinted strips pick up the fan */}
+        <Lightformer form="rect" intensity={5} color="#ff7a59" position={[5, -0.6, -0.5]} scale={[0.4, 2.5, 1]} rotation-y={-Math.PI / 2} />
+        <Lightformer form="rect" intensity={5} color="#7a8cff" position={[5, 1.4, -0.5]} scale={[0.4, 2.5, 1]} rotation-y={-Math.PI / 2} />
+        {/* thin front-left streak down the front face */}
+        <Lightformer form="rect" intensity={4} color="#ffffff" position={[-2.4, 0.5, 5]} scale={[0.4, 6, 1]} rotation-y={-0.45} />
       </Environment>
 
-      {/*
-        Backdrop that only exists inside the transmission pass. With a transparent canvas three.js
-        clears that buffer to 50% white, which makes glass look like flat grey plastic; this plane
-        paints the sampled page colour instead, and is colour-masked out of the on-screen pass.
-      */}
-      <mesh
-        position={[0, 0, -8]}
-        renderOrder={-10}
-        onBeforeRender={transmissionOnly}
-      >
-        <planeGeometry args={[80, 80]} />
-        <meshBasicMaterial ref={backdropMat} color="#0a0a0a" depthWrite={false} toneMapped={false} />
+      {/* backdrop — opaque, so it is also what the glass refracts */}
+      <mesh ref={bgMesh} position={[0, 0, -5]} renderOrder={-10}>
+        <planeGeometry args={[1, 1]} />
+        <shaderMaterial
+          ref={bgMat}
+          vertexShader={screenVertex}
+          fragmentShader={bgFragment}
+          uniforms={bgUniforms}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
 
       <group ref={root}>
-        {/* soft halo behind the slab — only seen through the glass, gives it an inner luminance */}
-        {/* opaque-list + additive: the transmission pass only renders the opaque list */}
-        <mesh position={[0, 0.1, -1.6]} renderOrder={-5} onBeforeRender={transmissionOnly}>
-          <planeGeometry args={[4.2, 5.4]} />
-          <meshBasicMaterial
-            ref={haloMat}
-            map={coreTex}
-            color="#e4ebf2"
-            transparent={false}
-            blending={THREE.AdditiveBlending}
-            opacity={0.55}
+        <group ref={tilt}>
+          <group ref={spin}>
+            <RoundedBox args={[S, S, S]} radius={RADIUS} smoothness={6} bevelSegments={6} creaseAngle={0.4}>
+              <MeshTransmissionMaterial
+                backside={!lowPower}
+                backsideThickness={0.35}
+                backsideEnvMapIntensity={0.7}
+                backsideResolution={lowPower ? 256 : 768}
+                samples={lowPower ? 6 : 16}
+                resolution={lowPower ? 384 : 1024}
+                transmission={1}
+                thickness={1.1}
+                roughness={0.08}
+                ior={1.5}
+                chromaticAberration={0.06}
+                anisotropicBlur={0}
+                distortion={0}
+                color="#ffffff"
+                attenuationColor="#f2f6fc"
+                attenuationDistance={2.5}
+                clearcoat={1}
+                clearcoatRoughness={0.03}
+                specularIntensity={1}
+                envMapIntensity={1.2}
+              />
+            </RoundedBox>
+          </group>
+        </group>
+
+        {/* analytic beam + spectrum, rebuilt every frame (the glass also refracts it) */}
+        <mesh renderOrder={5} frustumCulled={false}>
+          <bufferGeometry ref={lightGeo}>
+            <bufferAttribute attach="attributes-position" args={[builder.pos, 3]} />
+            <bufferAttribute attach="attributes-aColor" args={[builder.col, 3]} />
+            <bufferAttribute attach="attributes-aA" args={[builder.a, 1]} />
+            <bufferAttribute attach="attributes-aS" args={[builder.s, 1]} />
+            <bufferAttribute attach="attributes-aK" args={[builder.k, 1]} />
+          </bufferGeometry>
+          <shaderMaterial
+            vertexShader={lightVertex}
+            fragmentShader={lightFragment}
+            transparent
             depthWrite={false}
-            toneMapped={false}
+            depthTest={false}
+            blending={THREE.AdditiveBlending}
+            side={THREE.DoubleSide}
           />
         </mesh>
 
-        {/* light beam behind the slab */}
-        <group ref={beam} position={[0, -0.15, -1.1]} rotation-z={-0.32}>
-          {/* opaque core → lands in the transmission pass, so the glass refracts + disperses it */}
-          <mesh ref={beamCore} onBeforeRender={transmissionOnly}>
-            <planeGeometry args={[30, 0.016]} />
-            <meshBasicMaterial color={BEAM_CORE} toneMapped={false} />
-          </mesh>
-          <mesh>
-            <planeGeometry args={[16, 0.42]} />
-            <meshBasicMaterial
-              ref={beamGlowMat}
-              map={beamTex}
-              color="#e9ff9a"
-              transparent
-              opacity={0.3}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-              toneMapped={false}
-            />
-          </mesh>
-        </group>
+        <mesh ref={hotIn} renderOrder={6}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={glowTex} color={tmp.hot} transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} depthTest={false} toneMapped={false} />
+        </mesh>
+        <mesh ref={hotOut} renderOrder={6}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial map={glowTex} color="#ffe9d6" transparent opacity={0.7} blending={THREE.AdditiveBlending} depthWrite={false} depthTest={false} toneMapped={false} />
+        </mesh>
 
-        <group ref={spinner}>
-          <group ref={stretch}>
-            {Array.from({ length: SLICES }, (_, i) => (
-              <group
-                key={i}
-                ref={(el) => {
-                  shards.current[i] = el;
-                }}
-              >
-                <RoundedBox args={[W, SLICE_H, D]} radius={0.018} smoothness={2}>
-                  <meshPhysicalMaterial
-                    ref={(m: THREE.MeshPhysicalMaterial | null) => {
-                      glassMats.current[i] = m;
-                    }}
-                    color="#ffffff"
-                    transmission={1}
-                    roughness={0.04}
-                    metalness={0}
-                    thickness={1.4}
-                    ior={1.5}
-                    dispersion={lowPower ? 2 : 6}
-                    iridescence={0.35}
-                    iridescenceIOR={1.25}
-                    iridescenceThicknessRange={[120, 480]}
-                    clearcoat={1}
-                    clearcoatRoughness={0.05}
-                    specularIntensity={1}
-                    attenuationColor="#f4fbff"
-                    attenuationDistance={3}
-                    envMapIntensity={1.6}
-                    transparent
-                  />
-                </RoundedBox>
-                <lineSegments geometry={edges}>
-                  <lineBasicMaterial
-                    ref={(m: THREE.LineBasicMaterial | null) => {
-                      lineMats.current[i] = m;
-                    }}
-                    color="#ffffff"
-                    transparent
-                    opacity={0.2}
-                    depthWrite={false}
-                  />
-                </lineSegments>
-              </group>
-            ))}
-            <mesh ref={core} renderOrder={2}>
-              <planeGeometry args={[W * 0.9, H * 0.95]} />
-              <meshBasicMaterial
-                ref={coreMat}
-                map={coreTex}
-                depthTest={false}
-                color="#ccff00"
-                transparent
-                opacity={0.5}
-                blending={THREE.AdditiveBlending}
-                depthWrite={false}
-                toneMapped={false}
-              />
-            </mesh>
-          </group>
-        </group>
       </group>
     </>
   );

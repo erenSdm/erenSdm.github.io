@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { ChatScreen } from "@/components/demos/chat/ChatScreen";
 import { DeviceShell } from "@/components/demos/chat/DeviceShell";
+import { RelayApp } from "@/components/demos/chat/RelayApp";
+import { relaySans } from "@/components/demos/chat/fonts";
 
 export const metadata: Metadata = {
   title: "RELAY — Messaging",
-  description: "A mobile messaging conversation with presence, live typing, and read receipts.",
+  description:
+    "A light, working messenger: searchable inbox, live replies with typing and read receipts, reactions, voice notes, photos and calls.",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "RELAY",
   },
 };
@@ -16,8 +18,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0B0B0D",
-  colorScheme: "dark",
+  themeColor: "#F3F5F8",
+  colorScheme: "light",
 };
 
 export default async function Page({
@@ -27,8 +29,10 @@ export default async function Page({
 }) {
   const { embed } = await searchParams;
   return (
-    <DeviceShell embed={embed === "1"} background="#0B0B0D">
-      <ChatScreen />
+    <DeviceShell embed={embed === "1"} background="#F3F5F8" tone="light">
+      <div className={`${relaySans.className} h-full`}>
+        <RelayApp />
+      </div>
     </DeviceShell>
   );
 }

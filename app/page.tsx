@@ -5,6 +5,7 @@ import { Intro } from "@/components/sections/Intro";
 import { Services } from "@/components/sections/Services";
 import { WorkIndex } from "@/components/sections/WorkIndex";
 import { MobileShowcase } from "@/components/sections/MobileShowcase";
+import { Systems } from "@/components/sections/Systems";
 import { Process } from "@/components/sections/Process";
 import { Contact } from "@/components/sections/Contact";
 
@@ -24,6 +25,7 @@ export default function Home() {
           <Services />
           <WorkIndex />
           <MobileShowcase />
+          <Systems />
           <Process />
         </main>
         <Contact />

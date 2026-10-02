@@ -30,7 +30,7 @@ const PINNED: Record<string, DisciplineKey> = {
   ledger: "brand",
   agency: "brand",
   motors: "brand",
-  richcase: "brand",
+  richcase: "platforms",
   venn: "brand",
   nixrad: "brand",
 };

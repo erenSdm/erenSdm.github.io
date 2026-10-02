@@ -1,0 +1,133 @@
+/* RichCase demo — non-token CSS from the original app/globals.css, ported
+   verbatim. Document-level rules are scoped with html:has(.rc-root) so they
+   never leak to other portfolio pages. Theme tokens live in app/globals.css. */
+
+/* ===== BASE (original html/body rules + body className) ===== */
+html:has(.rc-root),
+html:has(.rc-root) body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html:has(.rc-root) body {
+  background: var(--color-ink-950);
+  color: var(--color-ink-100);
+  font-feature-settings: normal;
+}
+
+/* portfolio-wide film-grain overlay is not part of the original */
+html:has(.rc-root) body > div.mix-blend-soft-light[aria-hidden] {
+  display: none;
+}
+
+/* ===== LEGACY RC-* TOKENS ===== */
+.rc-root {
+  --rc-void: #0a0a0a;
+  --rc-abyss: #0d0d0d;
+  --rc-carbon: #161616;
+  --rc-surface: #1a1a1a;
+  --rc-gold: #D4AF37;
+  --rc-gold-dim: #A88A2C;
+  --rc-silver: #C0C0C0;
+  --rc-silver-dim: #808080;
+  --rc-border: rgba(255, 255, 255, 0.06);
+  --rc-border-gold: rgba(212, 175, 55, 0.15);
+}
+
+/* ===== KEYFRAMES ===== */
+@keyframes electricity-flow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes electricity-flow-v {
+  0% { background-position: 0 -200%; }
+  100% { background-position: 0 200%; }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 0.3; box-shadow: 0 0 4px rgba(212,175,55,0.2); }
+  50%      { opacity: 0.8; box-shadow: 0 0 12px rgba(212,175,55,0.5); }
+}
+
+@keyframes pulse-silver {
+  0%, 100% { opacity: 0.3; box-shadow: 0 0 4px rgba(192,192,192,0.2); }
+  50%      { opacity: 0.7; box-shadow: 0 0 10px rgba(192,192,192,0.4); }
+}
+
+@keyframes scan-down {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes trace-flow {
+  0%   { stroke-dashoffset: var(--trace-length, 200); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes pad-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.18); opacity: 1; }
+}
+
+/* ===== SCROLLBAR ===== */
+html:has(.rc-root) {
+  scrollbar-color: auto;
+}
+html:has(.rc-root) ::-webkit-scrollbar { width: 6px; }
+html:has(.rc-root) ::-webkit-scrollbar-track { background: var(--color-ink-950); }
+html:has(.rc-root) ::-webkit-scrollbar-thumb { background: var(--color-gold-700); border-radius: 0; }
+html:has(.rc-root) ::-webkit-scrollbar-thumb:hover { background: var(--color-gold-600); }
+
+/* ===== UTILITIES ===== */
+.rc-root .font-mono-accent { font-family: var(--font-rc-mono); }
+
+.rc-root .text-gold   { color: var(--color-gold-500); }
+.rc-root .text-silver { color: var(--color-silver-400); }
+
+.rc-root .text-gradient-gold {
+  background: linear-gradient(135deg, #E6C75A 0%, #D4AF37 50%, #A88A2C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rc-root .text-gradient-silver {
+  background: linear-gradient(135deg, #5A5A5A 0%, #C0C0C0 50%, #E0E0E0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rc-root .shadow-brutal       { box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 1); }
+.rc-root .shadow-brutal-press { box-shadow: 0 0 0 0 rgba(0, 0, 0, 1); transform: translate(4px, 4px); }
+
+.rc-root ::selection {
+  background: rgba(212, 175, 55, 0.3);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-root *,
+  .rc-root *::before,
+  .rc-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { PulseScreen } from "@/components/demos/pulse/PulseScreen";
+import { PulseApp } from "@/components/demos/pulse/PulseApp";
 import { DeviceShell } from "@/components/demos/chat/DeviceShell";
 
 export const metadata: Metadata = {
   title: "PULSE — Activity",
-  description: "PULSE — a mobile fitness today screen with animated activity rings, heart-rate telemetry, and streaks.",
+  description:
+    "PULSE — a light, fully interactive fitness tracker: tappable week, activity rings, a scrubbable heart-rate chart, water logging, live workout sessions and editable goals.",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "PULSE",
   },
 };
@@ -16,19 +17,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0B0A09",
-  colorScheme: "dark",
+  themeColor: "#F4F5F7",
+  colorScheme: "light",
 };
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ embed?: string }>;
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ embed?: string }> }) {
   const { embed } = await searchParams;
   return (
-    <DeviceShell embed={embed === "1"} background="#0B0A09">
-      <PulseScreen />
+    <DeviceShell embed={embed === "1"} background="#F4F5F7" tone="light">
+      <PulseApp />
     </DeviceShell>
   );
 }
