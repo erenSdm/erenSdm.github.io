@@ -45,8 +45,9 @@ export function Contact() {
                 {
                   k: t.contact.availabilityLabel,
                   v: (
-                    <span className="flex items-center gap-2">
-                      <span aria-hidden className="h-1.5 w-1.5 animate-blink rounded-full bg-volt" />
+                    <span className="flex items-start gap-2">
+                      {/* pinned to the first line when the label wraps */}
+                      <span aria-hidden className="mt-[0.55em] h-1.5 w-1.5 shrink-0 animate-blink rounded-full bg-volt" />
                       {t.contact.availability}
                     </span>
                   ),

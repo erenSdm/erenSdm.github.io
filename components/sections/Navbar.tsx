@@ -132,6 +132,7 @@ export function Navbar() {
         {open && (
           <motion.div
             id="mobile-menu"
+            data-lenis-prevent
             role="dialog"
             aria-modal="true"
             aria-label={t.nav.menu}
@@ -139,7 +140,7 @@ export function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.18 } }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 flex flex-col bg-carbon/96 px-4 pb-8 pt-20 text-paper backdrop-blur-xl lg:hidden"
+            className="fixed inset-0 z-40 flex flex-col overflow-y-auto overscroll-contain bg-carbon/96 px-4 pb-8 pt-20 text-paper backdrop-blur-xl lg:hidden"
           >
             <nav aria-label="Mobile" className="flex flex-1 flex-col">
               {items.map((item, i) => (
@@ -166,11 +167,30 @@ export function Navbar() {
                 </motion.button>
               ))}
             </nav>
+            {/* the reachable facts, so the overlay is useful without scrolling to the footer */}
+            <motion.dl
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.6, ease }}
+              className="font-plex mb-6 grid grid-cols-[7rem_1fr] gap-x-4 gap-y-3 text-[13px]"
+            >
+              <dt className="ui text-[10px] text-paper/45">{t.contact.emailLabel}</dt>
+              <dd>
+                <a href="mailto:errenaydemir@gmail.com" className="break-all underline decoration-paper/30 underline-offset-4">
+                  errenaydemir@gmail.com
+                </a>
+              </dd>
+              <dt className="ui text-[10px] text-paper/45">{t.contact.availabilityLabel}</dt>
+              <dd className="flex items-start gap-2 text-paper/80">
+                <span aria-hidden className="mt-[0.55em] h-1.5 w-1.5 shrink-0 animate-blink rounded-full bg-volt" />
+                {t.contact.availability}
+              </dd>
+            </motion.dl>
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.35, duration: 0.6, ease }}
-              className="flex gap-1"
+              className="flex gap-1 pb-[env(safe-area-inset-bottom)]"
             >
               <button
                 type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Pause, Play } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
@@ -14,11 +14,14 @@ import { tx, type SystemDef } from "./types";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
+/* below this width the stage stops reflowing and is scaled down as one piece,
+   so every station keeps its desktop proportions */
+const STAGE_MIN = 720;
+
 const UI = {
   scenarios: { en: "Scenarios", tr: "Senaryolar" },
   pause: { en: "Pause", tr: "Duraklat" },
   play: { en: "Play", tr: "Oynat" },
-  scroll: { en: "Drag to pan", tr: "Kaydırarak gez" },
   flagship: { en: "Flagship build", tr: "Amiral gemisi" },
   sim: { en: "Simulated with representative traffic", tr: "Temsilî trafikle simüle edildi" },
 } as const;
@@ -75,8 +78,9 @@ export function SystemPanel({
               <span className="ui bg-volt px-2 py-1 text-[10px] text-carbon">{tx(UI.flagship, locale)}</span>
             )}
           </div>
-          <div className={cn("grid grid-cols-[3.25rem_1fr] items-baseline gap-x-3 md:grid-cols-[5rem_1fr]", compact ? "mt-4" : "mt-6")}>
-            <span className="font-plex tabular text-xl md:text-2xl">{String(index + 1).padStart(2, "0")}</span>
+          <div className={cn("grid items-baseline gap-x-3 md:grid-cols-[5rem_1fr]", compact ? "mt-4" : "mt-6")}>
+            {/* phones already read the index off the sticky tab switcher */}
+            <span className="font-plex tabular hidden text-xl md:block md:text-2xl">{String(index + 1).padStart(2, "0")}</span>
             <h3
               id={`sys-${sys.slug}-title`}
               className={cn("font-wide text-balance", compact ? "text-[clamp(1.75rem,2.5vw,2.75rem)] leading-[1.02]" : flagship ? "text-display-lg" : "text-display-md")}
@@ -84,7 +88,7 @@ export function SystemPanel({
               {tx(c.title, locale)}
             </h3>
           </div>
-          <ul className={cn("ml-[calc(3.25rem+0.75rem)] flex flex-wrap gap-1.5 md:ml-[calc(5rem+0.75rem)]", compact ? "mt-4" : "mt-6")}>
+          <ul className={cn("flex flex-wrap gap-1.5 md:ml-[calc(5rem+0.75rem)]", compact ? "mt-4" : "mt-6")}>
             {c.tags.map((t) => (
               <li
                 key={t}
@@ -191,24 +195,23 @@ export function SystemPanel({
       >
         <div className="relative flex flex-col bg-carbon text-paper">
           <Metrics items={sys.metrics} live={live} />
-          <div
-            className={cn(
-              "flex-1",
-              compact ? "flex min-h-0 items-center justify-center p-3" : "overflow-x-auto overscroll-x-contain [scrollbar-width:thin]"
-            )}
-          >
-            {/* inline: the global `* { min-width: 0 }` reset outranks layered utilities.
-                compact: the 1000:520 stage takes whatever height is left, capped by the width */}
-            <div
-              className={compact ? "flex h-full max-w-full items-center" : "p-3 md:p-5"}
-              style={compact ? { aspectRatio: "1000 / 520" } : { minWidth: 720 }}
-            >
-              <FlowStage sys={sys} story={s.story} step={s.step} run={s.run} live={live} />
+          {compact ? (
+            <div className="flex min-h-0 flex-1 items-center justify-center p-3">
+              {/* the 1000:520 stage takes whatever height is left, capped by the width */}
+              <div className="flex h-full max-w-full items-center" style={{ aspectRatio: "1000 / 520" }}>
+                <FlowStage sys={sys} story={s.story} step={s.step} run={s.run} live={live} />
+              </div>
             </div>
-          </div>
-          <div className="ui flex items-center justify-between gap-4 px-4 pb-3 text-[10px] text-paper/35">
-            <span>{tx(UI.sim, locale)}</span>
-            <span className="md:hidden">{tx(UI.scroll, locale)} →</span>
+          ) : (
+            /* narrow screens get the whole stage as a scaled miniature, never a crop */
+            <FitWidth design={STAGE_MIN}>
+              <div className="p-3 md:p-5">
+                <FlowStage sys={sys} story={s.story} step={s.step} run={s.run} live={live} />
+              </div>
+            </FitWidth>
+          )}
+          <div className="ui px-4 pb-3 text-[10px] text-paper/35" style={{ lineHeight: 1.4 }}>
+            {tx(UI.sim, locale)}
           </div>
         </div>
         {compact ? (
@@ -229,5 +232,48 @@ export function SystemPanel({
         </div>
       )}
     </motion.article>
+  );
+}
+
+/**
+ * Lays its child out at `design` px (or the real width, if wider) and scales it
+ * down to fit — a crisp miniature instead of a horizontally scrolling crop.
+ * The outer box takes the scaled height so the page flows around it.
+ */
+function FitWidth({ design, className, children }: { design: number; className?: string; children: React.ReactNode }) {
+  const outer = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState<{ w: number; s: number; h: number } | null>(null);
+
+  useEffect(() => {
+    const o = outer.current;
+    const i = inner.current;
+    if (!o || !i) return;
+    const measure = () => {
+      const avail = o.clientWidth;
+      if (!avail) return;
+      const w = Math.max(design, avail);
+      const s = avail / w;
+      // offsetHeight ignores the transform, so this is the unscaled layout height
+      setFit({ w, s, h: i.offsetHeight * s });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(o);
+    ro.observe(i);
+    return () => ro.disconnect();
+  }, [design]);
+
+  return (
+    <div ref={outer} className={cn("relative overflow-hidden", className)} style={fit ? { height: fit.h } : undefined}>
+      <div
+        ref={inner}
+        className="origin-top-left"
+        // inline width: the global `* { min-width: 0 }` reset outranks layered utilities
+        style={{ width: fit?.w ?? design, transform: fit ? `scale(${fit.s})` : undefined, visibility: fit ? undefined : "hidden" }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }

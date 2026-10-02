@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { Kicker } from "@/components/primitives/SplitButton";
 import { SystemPanel } from "@/components/systems/SystemPanel";
@@ -23,6 +24,9 @@ const COPY = {
     en: "Screens are only the part you see. Keep scrolling and each system slides past at work: the live traffic running through it, and one real request followed end to end, with the data it carries at every step and the milliseconds each step takes.",
     tr: "Ekranlar işin yalnızca görünen kısmı. Kaydırmaya devam ettikçe her sistem yanından çalışır hâlde geçiyor: içinden akan canlı trafiği ve baştan sona takip edilen tek bir isteği. Her adımda verinin nasıl göründüğünü ve o adımın kaç milisaniye sürdüğünü görebilirsiniz.",
   },
+  prev: { en: "Previous system", tr: "Önceki sistem" },
+  next: { en: "Next system", tr: "Sonraki sistem" },
+  done: { en: "On to the process", tr: "Sürece geç" },
   legend: [
     { k: "packet", en: "Live traffic", tr: "Canlı trafik" },
     { k: "token", en: "The request we follow", tr: "Takip edilen istek" },
@@ -50,9 +54,15 @@ export function Systems() {
   const jumpTo = useHorizontalPin(wrap, track, horizontal, onProgress);
 
   function go(slug: string) {
-    const el = document.getElementById(`sys-${slug}`);
-    if (horizontal && el?.parentElement && jumpTo(el.parentElement)) return;
-    scrollToId(`sys-${slug}`, -72);
+    if (horizontal) {
+      const el = document.getElementById(`sys-${slug}`);
+      if (el?.parentElement && jumpTo(el.parentElement)) return;
+      scrollToId(`sys-${slug}`, -72);
+      return;
+    }
+    // the stacked layout shows one system at a time, like the desktop track
+    setActive(Math.max(0, SYSTEMS.findIndex((x) => x.slug === slug)));
+    requestAnimationFrame(() => scrollToId("sys-deck", -57));
   }
 
   return (
@@ -69,21 +79,22 @@ export function Systems() {
         </div>
 
         {/* index rail + legend */}
-        <div className="mt-14 grid gap-8 border-t border-dashed border-paper/20 pt-6 lg:grid-cols-12">
-          <ol className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
+        <div className="mt-10 grid gap-8 border-t border-dashed border-paper/20 pt-6 lg:mt-14 lg:grid-cols-12">
+          {/* below lg the sticky tab switcher is the index, so the rail would only repeat it */}
+          <ol className="hidden lg:col-span-8 lg:grid lg:grid-cols-4">
             {SYSTEMS.map((s, i) => (
               <li key={s.slug}>
                 <button
                   type="button"
                   onClick={() => go(s.slug)}
-                  aria-current={horizontal && active === i ? "true" : undefined}
+                  aria-current={active === i ? "true" : undefined}
                   className="group flex w-full items-baseline gap-3 border-b border-dashed border-paper/15 py-3 text-left outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-volt sm:pr-4 lg:border-b-0"
                 >
                   <span className="ui tabular text-paper/45">{String(i + 1).padStart(2, "0")}</span>
                   <span
                     className={cn(
                       "font-plex text-[13px] leading-snug transition-colors group-hover:text-volt",
-                      horizontal && active === i ? "text-volt" : "text-paper/80"
+                      active === i ? "text-volt" : "text-paper/80"
                     )}
                   >
                     {tx(s.copy.title, locale)}
@@ -118,10 +129,77 @@ export function Systems() {
           </div>
         </div>
       ) : (
-        <div className="mx-auto flex max-w-[1680px] flex-col gap-6 px-2 pb-24 md:px-4 md:pb-36">
-          {SYSTEMS.map((s, i) => (
-            <SystemPanel key={s.slug} sys={s} index={i} light={i % 2 === 1} flagship={i === 0} />
-          ))}
+        /* phones, tablets, reduced motion — one system at a time behind a sticky
+           switcher, the stacked counterpart of the sideways desktop track */
+        <div id="sys-deck" className="mx-auto max-w-[1680px] px-2 pb-24 md:px-4 md:pb-36">
+          <div className="sticky top-[57px] z-20 -mx-2 mb-2 bg-carbon/90 px-4 backdrop-blur-md md:-mx-4 md:px-6">
+            <div role="tablist" aria-label={tx(COPY.title, locale)} className="grid grid-cols-4 gap-1.5">
+              {SYSTEMS.map((s, i) => (
+                <button
+                  key={s.slug}
+                  type="button"
+                  role="tab"
+                  id={`sys-tab-${s.slug}`}
+                  aria-selected={active === i}
+                  aria-controls="sys-tabpanel"
+                  onClick={() => go(s.slug)}
+                  className="flex flex-col justify-end gap-2 pt-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-volt min-h-11"
+                >
+                  <span className={cn("ui tabular text-[11px] transition-colors", active === i ? "text-volt" : "text-paper/45")}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className={cn("h-[3px] w-full transition-colors duration-500", i <= active ? "bg-volt" : "bg-paper/15")} />
+                </button>
+              ))}
+            </div>
+            <p className="font-plex truncate py-2.5 text-[12px] text-paper/70">{tx(SYSTEMS[active].copy.title, locale)}</p>
+          </div>
+
+          <div role="tabpanel" id="sys-tabpanel" aria-labelledby={`sys-tab-${SYSTEMS[active].slug}`}>
+            <SystemPanel
+              key={SYSTEMS[active].slug}
+              sys={SYSTEMS[active]}
+              index={active}
+              light={active % 2 === 1}
+              flagship={active === 0}
+            />
+          </div>
+
+          <div className="mt-2 grid grid-cols-[3.5rem_1fr] gap-1.5">
+            <button
+              type="button"
+              onClick={() => go(SYSTEMS[Math.max(0, active - 1)].slug)}
+              disabled={active === 0}
+              aria-label={tx(COPY.prev, locale)}
+              className="flex h-16 items-center justify-center border border-dashed border-paper/25 text-paper outline-none transition-[opacity,transform] focus-visible:ring-2 focus-visible:ring-volt active:scale-[0.98] disabled:opacity-30"
+            >
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+            {active < SYSTEMS.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => go(SYSTEMS[active + 1].slug)}
+                className="group flex h-16 items-center justify-between gap-4 bg-paper px-4 text-left text-carbon outline-none transition-transform focus-visible:ring-2 focus-visible:ring-volt active:scale-[0.98]"
+              >
+                <span className="flex flex-col gap-1.5">
+                  <span className="ui text-[10px] opacity-55">
+                    {tx(COPY.next, locale)} · {String(active + 2).padStart(2, "0")}
+                  </span>
+                  <span className="font-plex truncate text-[13px]">{tx(SYSTEMS[active + 1].copy.title, locale)}</span>
+                </span>
+                <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" strokeWidth={1.5} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => scrollToId("process", -56)}
+                className="flex h-16 items-center justify-between gap-4 border border-dashed border-paper/25 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-volt active:scale-[0.98]"
+              >
+                <span className="ui text-[11px]">{tx(COPY.done, locale)}</span>
+                <ArrowDown className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </section>

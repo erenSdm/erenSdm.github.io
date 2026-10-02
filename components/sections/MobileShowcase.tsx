@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { MOBILE_DEMOS } from "@/lib/demos";
 import { useLanguage } from "@/lib/i18n/context";
 import { useWheelScroll } from "@/lib/useWheelScroll";
@@ -19,8 +19,8 @@ export function MobileShowcase() {
   const { t, locale } = useLanguage();
   const wrap = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  // The pinned phone wheel is a desktop effect; phones and reduced motion fall
-  // back to a plain vertical list so touch scrolling stays native.
+  // The pinned phone wheel is a desktop effect; phones and reduced motion get
+  // the swipe deck below so touch scrolling stays native.
   const stacked = !useMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)");
 
   // after the last phone the pin keeps going: it turns over and hands off to Systems
@@ -33,22 +33,13 @@ export function MobileShowcase() {
       {/* header */}
       <div className="mx-auto max-w-[1680px] px-4 pt-6 md:px-10 md:pt-8 lg:px-[8.5vw]">
         <Kicker className="mb-6">{t.mobile.label}</Kicker>
-        {/* sized so "Mobil uygulamalar" stays on one line at every width */}
-        <h2 className="font-wide whitespace-nowrap text-[clamp(1.35rem,5.4vw,5.6rem)]">{t.mobile.title}</h2>
+        {/* from md up sized so "Mobil uygulamalar" stays on one line; phones let it wrap at section-title scale */}
+        <h2 className="font-wide text-[clamp(1.75rem,8.4vw,2.6rem)] md:whitespace-nowrap md:text-[clamp(1.35rem,5.4vw,5.6rem)]">{t.mobile.title}</h2>
       </div>
 
       {stacked ? (
-        /* mobile + reduced motion — plain vertical list, copy above each phone */
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-20 px-4 pb-24 pt-10 md:gap-24 md:px-10">
-          {MOBILE_DEMOS.map((demo, i) => (
-            <div key={demo.slug} className="flex flex-col items-center gap-10 text-center">
-              <Copy demo={demo} i={i} locale={locale} label={t.mobile.open} />
-              <div className="w-full max-w-[300px]">
-                <Phone demo={demo} />
-              </div>
-            </div>
-          ))}
-        </div>
+        /* touch + reduced motion — a native swipe deck instead of the pinned wheel */
+        <SwipeDeck locale={locale} label={t.mobile.open} />
       ) : (
         /* pinned phone wheel — copy on top, phones on a half circle below */
         <div ref={wrap} className="relative h-[100dvh] overflow-hidden">
@@ -145,8 +136,9 @@ export function MobileShowcase() {
 function Phone({ demo }: { demo: MobileDemo }) {
   return (
     <PhoneFrame accent={demo.accent} className="max-w-none md:max-w-none">
+      {/* embed=1 makes the app reserve room for this frame's status bar + island */}
       <LivePreview
-        src={demo.route}
+        src={`${demo.route}?embed=1`}
         title={demo.brand}
         accent={demo.accent}
         poster={`/demos/mobile/${demo.slug}.jpg`}
@@ -209,6 +201,186 @@ function Copy({
         <span className="ui tabular text-paper/45">
           {String(i + 1).padStart(2, "0")} / {String(MOBILE_DEMOS.length).padStart(2, "0")}
         </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---- touch + reduced motion: swipe deck ---- */
+
+const ARC_STEP = 9; // degrees between neighbouring phones on the swipe arc
+
+/**
+ * The touch version of the desktop wheel. Phones sit in a native scroll-snap
+ * track; as it scrolls, each one is tilted and dropped along a shallow arc by
+ * its distance from the centre, so swiping reads like turning the same wheel.
+ * The copy above swaps to whichever phone is centred.
+ */
+function SwipeDeck({ locale, label }: { locale: "en" | "tr"; label: string }) {
+  const track = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
+  const current = MOBILE_DEMOS[active] ?? MOBILE_DEMOS[0];
+
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const items = Array.from(el.querySelectorAll<HTMLElement>("[data-deck-item]"));
+    let raf = 0;
+
+    const place = () => {
+      raf = 0;
+      const mid = el.scrollLeft + el.clientWidth / 2;
+      let best = 0;
+      let bestD = Infinity;
+      items.forEach((item, i) => {
+        const w = item.offsetWidth;
+        const d = (item.offsetLeft + w / 2 - mid) / (w + 16);
+        const ad = Math.min(Math.abs(d), 2);
+        const a = (d * ARC_STEP * Math.PI) / 180;
+        const r = w * 3.2;
+        const face = item.firstElementChild as HTMLElement;
+        face.style.transform = `translate3d(0, ${(1 - Math.cos(a)) * r}px, 0) rotate(${d * ARC_STEP}deg) scale(${1 - ad * 0.08})`;
+        face.style.opacity = String(1 - ad * 0.28);
+        if (Math.abs(d) < bestD) {
+          bestD = Math.abs(d);
+          best = i;
+        }
+      });
+      if (best !== activeRef.current) {
+        activeRef.current = best;
+        setActive(best);
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(place);
+    };
+
+    place();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    const ro = new ResizeObserver(onScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const go = (i: number) => {
+    const el = track.current;
+    const item = el?.querySelectorAll<HTMLElement>("[data-deck-item]")[i];
+    if (!el || !item) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollTo({
+      left: item.offsetLeft + item.offsetWidth / 2 - el.clientWidth / 2,
+      behavior: reduce ? "auto" : "smooth",
+    });
+  };
+
+  return (
+    <div className="relative pb-4 pt-8 md:pb-32">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-[58%] h-[70vw] max-h-[520px] w-[70vw] max-w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.18] blur-[80px] transition-colors duration-700"
+        style={{ backgroundColor: current.accent }}
+      />
+
+      {/* every app's copy shares one grid cell; only the centred one shows */}
+      <div className="relative grid px-4 md:px-10" aria-live="polite">
+        {MOBILE_DEMOS.map((demo, i) => (
+          <div
+            key={demo.slug}
+            inert={i !== active}
+            className={cn(
+              "flex justify-center text-center transition-[opacity,transform] duration-500 ease-out [grid-area:1/1]",
+              i === active ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
+            )}
+          >
+            <Copy demo={demo} i={i} locale={locale} label={label} compact />
+          </div>
+        ))}
+      </div>
+
+      {/* the deck — native horizontal scroll, snapped to the centre */}
+      <div
+        ref={track}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={label}
+        data-lenis-prevent
+        className="relative mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-12 pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ paddingInline: "calc(50% - min(30vw, 135px))" }}
+      >
+        {MOBILE_DEMOS.map((demo, i) => (
+          <div
+            key={demo.slug}
+            data-deck-item
+            aria-roledescription="slide"
+            aria-label={`${i + 1} / ${MOBILE_DEMOS.length}: ${demo.brand}`}
+            className="w-[min(60vw,270px)] shrink-0 snap-center"
+          >
+            <div className="origin-bottom will-change-transform">
+              {i === active ? (
+                <Link
+                  href={demo.route}
+                  aria-label={`${label}: ${demo.brand}`}
+                  className="block outline-none focus-visible:ring-2 focus-visible:ring-volt"
+                >
+                  <Phone demo={demo} />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => go(i)}
+                  aria-label={demo.brand}
+                  className="block w-full outline-none focus-visible:ring-2 focus-visible:ring-volt"
+                >
+                  <Phone demo={demo} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* pager — prev / segment per app / next */}
+      <div className="relative mx-auto flex max-w-[420px] items-center gap-3 px-4">
+        <button
+          type="button"
+          onClick={() => go(Math.max(0, active - 1))}
+          disabled={active === 0}
+          aria-label="Previous"
+          className="flex h-11 w-11 shrink-0 items-center justify-center border border-paper/25 text-paper outline-none transition-[opacity,transform] focus-visible:ring-2 focus-visible:ring-volt active:scale-[0.96] disabled:opacity-30"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+        <div className="flex flex-1 gap-1.5">
+          {MOBILE_DEMOS.map((demo, i) => (
+            <button
+              key={demo.slug}
+              type="button"
+              onClick={() => go(i)}
+              aria-label={demo.brand}
+              aria-current={i === active ? "true" : undefined}
+              className="group flex h-11 flex-1 items-center outline-none focus-visible:ring-2 focus-visible:ring-volt"
+            >
+              <span
+                className="h-[3px] w-full transition-colors duration-500"
+                style={{ backgroundColor: i === active ? demo.accent : "rgb(244 244 239 / 0.18)" }}
+              />
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => go(Math.min(MOBILE_DEMOS.length - 1, active + 1))}
+          disabled={active === MOBILE_DEMOS.length - 1}
+          aria-label="Next"
+          className="flex h-11 w-11 shrink-0 items-center justify-center border border-paper/25 text-paper outline-none transition-[opacity,transform] focus-visible:ring-2 focus-visible:ring-volt active:scale-[0.96] disabled:opacity-30"
+        >
+          <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+        </button>
       </div>
     </div>
   );

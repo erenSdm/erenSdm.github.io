@@ -56,17 +56,17 @@ export function Inspector({
   }, [elapsed, locale, reduce]);
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col bg-carbon text-paper">
+    <div className="flex h-full flex-col bg-carbon text-paper md:min-h-[420px]">
       <div className="ui flex items-center gap-2 border-b border-dashed border-paper/15 px-4 py-2.5 text-[10px] text-paper/50">
         <span aria-hidden className={cn("h-1.5 w-1.5", live ? "animate-blink bg-volt" : "bg-paper/25")} />
         <span>{tx(UI.tracking, locale)}</span>
         <span className="truncate text-paper/35">/ {tx(story.label, locale)}</span>
       </div>
 
-      <div className="border-b border-dashed border-paper/15 px-4 py-4">
+      <div className="border-b border-dashed border-paper/15 px-4 py-3 md:py-4">
         <div lang="en" className="font-plex text-[12px] text-volt">{story.entity}</div>
         <div className="mt-1 flex items-baseline gap-3">
-          <span ref={num} className="font-wide text-[34px] leading-none tabular">
+          <span ref={num} className="font-wide text-[26px] leading-none tabular md:text-[34px]">
             0 ms
           </span>
         </div>
@@ -74,7 +74,7 @@ export function Inspector({
       </div>
 
       {/* waterfall */}
-      <ol className="flex flex-col gap-[7px] px-4 py-4" aria-label="Latency waterfall">
+      <ol className="flex flex-col gap-[5px] px-4 py-3 md:gap-[7px] md:py-4" aria-label="Latency waterfall">
         {steps.map((s, i) => {
           const reached = i <= step;
           const now = i === step;
@@ -112,7 +112,7 @@ export function Inspector({
         <div className="ui mb-2 text-[10px] text-paper/45">
           {tx(UI.payload, locale)} <span className="text-paper/80">{cur ? stations.get(cur.at)?.label : "—"}</span>
         </div>
-        <div className="font-plex min-h-[118px] text-[11px] leading-[1.55]">
+        <div className="font-plex min-h-[96px] text-[11px] leading-[1.55] md:min-h-[118px]">
           <AnimatePresence mode="wait" initial={false}>
             <motion.pre
               key={`${story.id}-${step}`}

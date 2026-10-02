@@ -44,7 +44,7 @@ export function Hero() {
 
         <h1
           aria-label={t.hero.title.join(" ")}
-          className="relative font-wide text-[clamp(1.55rem,calc(3.6vw_+_0.3rem),4.2rem)]"
+          className="relative font-wide text-[clamp(1.6rem,8.4vw,2.6rem)] md:text-[clamp(1.55rem,calc(3.6vw_+_0.3rem),4.2rem)]"
           style={{
             fontWeight: 300,
             letterSpacing: "0.06em",
