@@ -1,6 +1,6 @@
 export const en = {
   meta: {
-    title: "Eren Aydemir — Designer & Full-Stack Developer",
+    title: "Eren Aydemir",
     description:
       "Eren Aydemir is an Istanbul-based designer and full-stack developer. Websites, mobile apps and backend automation — every one of them a live build you can click into.",
   },

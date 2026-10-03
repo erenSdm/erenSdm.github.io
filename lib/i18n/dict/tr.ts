@@ -2,7 +2,7 @@ import type { Dictionary } from "./en";
 
 export const tr: Dictionary = {
   meta: {
-    title: "Eren Aydemir — Tasarımcı ve Full-Stack Geliştirici",
+    title: "Eren Aydemir",
     description:
       "Eren Aydemir, İstanbul'da yaşayan bir tasarımcı ve full-stack geliştirici. Web siteleri, mobil uygulamalar ve backend otomasyonları — hepsi tıklayıp içine girebileceğin canlı projeler.",
   },

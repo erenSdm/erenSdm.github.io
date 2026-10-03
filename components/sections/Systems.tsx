@@ -14,7 +14,7 @@ import { useHorizontalPin } from "@/lib/useHorizontalPin";
 import { useMedia } from "@/lib/useMedia";
 import { scrollToId, cn } from "@/lib/utils";
 
-const SYSTEMS = [richcasebot, rag, integrations, automation];
+const SYSTEMS = [integrations, rag, richcasebot, automation];
 
 const COPY = {
   title: { en: "Under the hood", tr: "Perde arkası" },
