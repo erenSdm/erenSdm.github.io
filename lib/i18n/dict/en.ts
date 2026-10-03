@@ -114,11 +114,14 @@ export const en = {
   contact: {
     kicker: "Contact",
     title: ["Let's build", "something", "sharp."],
-    body: "Have a product that deserves better than a template? Tell me what it does and who it's for — I reply within one working day.",
+    // index of the title line set in grey
+    titleAccent: 1,
     cta: "Start a project",
     availabilityLabel: "Availability",
     availability: "Booking Q4 2026 — Q1 2027",
     emailLabel: "Direct",
+    phoneLabel: "Phone",
+    whatsapp: "Message on WhatsApp",
     locationLabel: "Based in",
     location: "Istanbul, TR — remote worldwide",
   },

@@ -6,6 +6,8 @@ import { scrollToId } from "@/lib/utils";
 import { SplitButton } from "@/components/primitives/SplitButton";
 
 const EMAIL = "errenaydemir@gmail.com";
+const PHONE = "+90 546 262 42 74";
+const PHONE_DIGITS = "905462624274";
 
 export function Contact() {
   const { t, locale, toggle } = useLanguage();
@@ -15,19 +17,16 @@ export function Contact() {
       <div className="mx-auto max-w-[1680px] px-4 pb-16 pt-28 md:px-10 md:pt-40 lg:px-[8.5vw]">
 
         <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
-          <h2 className="font-wide text-[clamp(2.2rem,6.2vw,6.6rem)] lg:col-span-8">
+          {/* pulled out of the gutter to line up with the wordmark below */}
+          <h2 className="font-wide text-[clamp(2.2rem,6.2vw,6.6rem)] lg:col-span-8 lg:-ml-[3.5vw]">
             {t.contact.title.map((l, i) => (
-              <span key={l} className={i === 1 ? "block text-paper/45" : "block"}>
+              <span key={l} className={i === t.contact.titleAccent ? "block text-paper/45" : "block"}>
                 {l}
               </span>
             ))}
           </h2>
 
           <div className="flex flex-col justify-end gap-10 lg:col-span-4">
-            <p className="font-plex max-w-[42ch] text-[15px] leading-[1.7] text-paper/75">
-              {t.contact.body}
-            </p>
-
             <dl className="font-plex border-t border-dashed border-paper/25 text-sm">
               {[
                 {
@@ -39,6 +38,27 @@ export function Contact() {
                     >
                       {EMAIL}
                     </a>
+                  ),
+                },
+                {
+                  k: t.contact.phoneLabel,
+                  v: (
+                    <span className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                      <a
+                        href={`tel:+${PHONE_DIGITS}`}
+                        className="whitespace-nowrap underline decoration-paper/30 underline-offset-4 transition-colors hover:text-volt hover:decoration-volt"
+                      >
+                        {PHONE}
+                      </a>
+                      <a
+                        href={`https://wa.me/${PHONE_DIGITS}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ui text-volt underline decoration-volt/40 underline-offset-4 transition-colors hover:decoration-volt"
+                      >
+                        {t.contact.whatsapp}
+                      </a>
+                    </span>
                   ),
                 },
                 {
