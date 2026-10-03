@@ -29,7 +29,7 @@ export function Featured() {
           <Reveal>
             <div className="relative">
               <ParallaxImage
-                src="https://picsum.photos/seed/sevigne-cape-signature/1100/1400"
+                src="/demos/atelier/cape.webp"
                 alt="Sévigné Ottoman-Wool Cape photographed on a plain studio ground"
                 width={1100}
                 height={1400}

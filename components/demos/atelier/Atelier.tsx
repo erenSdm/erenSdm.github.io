@@ -67,7 +67,7 @@ export function Atelier() {
           <Reveal className="lg:col-span-6 lg:mt-16" delay={0.1}>
             <div className="relative">
               <ParallaxImage
-                src="https://picsum.photos/seed/sevigne-atelier-hands/1100/1360"
+                src="/demos/atelier/hands.webp"
                 alt="Hands finishing a garment seam inside the Sévigné atelier"
                 width={1100}
                 height={1360}

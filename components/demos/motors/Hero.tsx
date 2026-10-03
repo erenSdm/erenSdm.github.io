@@ -23,7 +23,7 @@ export function Hero() {
       <div className="absolute inset-0 z-0">
         <motion.img
           // eslint-disable-next-line @next/next/no-img-element
-          src={heroImage("apex-solstice-hero")}
+          src={heroImage("hero")}
           alt="APEX Solstice electric hypersedan, front three-quarter, low cinematic light"
           className="h-full w-full object-cover"
           initial={reduce ? false : { scale: 1.12, opacity: 0 }}

@@ -22,7 +22,7 @@ function ProductCard({
       >
         <div className="relative overflow-hidden">
           <ParallaxImage
-            src={`https://picsum.photos/seed/${item.seed}/${item.w}/${item.h}`}
+            src={`/demos/atelier/${item.seed}.webp`}
             alt={`${item.name} — ${item.category}, Sévigné Collection XII`}
             width={item.w}
             height={item.h}

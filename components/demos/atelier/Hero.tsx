@@ -107,7 +107,7 @@ export function Hero() {
             className="relative"
           >
             <ParallaxImage
-              src="https://picsum.photos/seed/sevigne-hero-portrait/1100/1500"
+              src="/demos/atelier/hero.webp"
               alt="Model in a tailored Sévigné winter coat, photographed for the Automne-Hiver 2026 campaign"
               width={1100}
               height={1500}

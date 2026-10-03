@@ -10,7 +10,7 @@ export function Lookbook() {
     >
       {/* full-bleed background image */}
       <ParallaxImage
-        src="https://picsum.photos/seed/sevigne-lookbook-atelier/1900/1200"
+        src="/demos/atelier/lookbook.webp"
         alt="Wide editorial lookbook photograph of the Sévigné Automne-Hiver 2026 silhouette"
         width={1900}
         height={1200}

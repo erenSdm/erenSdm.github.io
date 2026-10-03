@@ -15,7 +15,7 @@ export type Paint = {
   name: string;
   /** hex used for the swatch + tint overlay */
   hex: string;
-  /** picsum seed — different per paint so the shot visibly changes */
+  /** image file in /public/demos/motors — different per paint so the shot visibly changes */
   seed: string;
   /** tint opacity applied over the base shot */
   tint: number;
@@ -28,7 +28,7 @@ export const PAINTS: Paint[] = [
     id: "obsidian",
     name: "Obsidian",
     hex: "#0b0b0d",
-    seed: "apex-obsidian-93",
+    seed: "obsidian",
     tint: 0.5,
     finish: "Deep solid",
     priceDelta: 0,
@@ -37,7 +37,7 @@ export const PAINTS: Paint[] = [
     id: "nurburgring",
     name: "Nürburgring Silver",
     hex: "#b7bcc2",
-    seed: "apex-silver-41",
+    seed: "silver",
     tint: 0.34,
     finish: "Metallic",
     priceDelta: 1_800,
@@ -46,7 +46,7 @@ export const PAINTS: Paint[] = [
     id: "voltage",
     name: "Voltage Amber",
     hex: "#ffb800",
-    seed: "apex-amber-77",
+    seed: "amber",
     tint: 0.4,
     finish: "Signature multi-coat",
     priceDelta: 4_500,
@@ -55,7 +55,7 @@ export const PAINTS: Paint[] = [
     id: "storm",
     name: "Storm Blue",
     hex: "#2b4a6b",
-    seed: "apex-storm-58",
+    seed: "storm",
     tint: 0.42,
     finish: "Metallic",
     priceDelta: 2_200,
@@ -64,7 +64,7 @@ export const PAINTS: Paint[] = [
     id: "bianco",
     name: "Bianco",
     hex: "#eceae4",
-    seed: "apex-bianco-12",
+    seed: "bianco",
     tint: 0.3,
     finish: "Pearl",
     priceDelta: 1_500,
@@ -157,28 +157,28 @@ export const TRIAD = [
 // Design / feature scroll bands.
 export const FEATURES = [
   {
-    seed: "apex-aero-band",
+    seed: "aero",
     index: "01",
     kicker: "Aerodynamics",
     title: "Air, moved out of the way.",
     body: "Active underbody vanes and a flush-glass profile hold the Solstice at a class-leading 0.197 Cd — every kilometre of range earned in the wind tunnel, not the brochure.",
   },
   {
-    seed: "apex-interior-band",
+    seed: "interior",
     index: "02",
     kicker: "Interior",
     title: "A cabin tuned to silence.",
     body: "Laminated acoustic glass, a driver-oriented fascia, and sustainably tanned Nappa. The loudest thing at 200 km/h is the person beside you.",
   },
   {
-    seed: "apex-glassroof-band",
+    seed: "glassroof",
     index: "03",
     kicker: "Glass roof",
     title: "One pane, horizon to horizon.",
     body: "A single electrochromic panoramic roof dims from clear to shade in 0.3 seconds — no shade, no seams, no compromise on headroom.",
   },
   {
-    seed: "apex-display-band",
+    seed: "display",
     index: "04",
     kicker: "Driver display",
     title: "Instruments that recede.",
@@ -240,5 +240,5 @@ export function formatUSD(n: number): string {
 }
 
 export function heroImage(seed: string): string {
-  return `https://picsum.photos/seed/${seed}/1600/900`;
+  return `/demos/motors/${seed}.webp`;
 }
