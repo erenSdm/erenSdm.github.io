@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   output: "export",
   // Emit routes as <route>/index.html so static hosts resolve them as folders.
   trailingSlash: true,
+  // No image-optimization server on a static host; serve files as-is.
+  images: { unoptimized: true },
   // This project ships its own package-lock; pin the workspace root so Next
   // doesn't infer an ancestor directory that also contains a lockfile.
   turbopack: {

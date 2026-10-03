@@ -37,7 +37,7 @@ function Portrait({ className }: { className?: string }) {
         }}
       >
         <Image
-          src="/about/me2.png"
+          src="/about/me2.webp"
           alt={f.alt}
           fill
           sizes="(min-width: 1024px) 46vw, 90vw"
