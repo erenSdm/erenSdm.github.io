@@ -13,7 +13,7 @@ interface HazardTapeProps {
  * Uses the acid accent as a flat band (no glow).
  */
 export function HazardTape({
-  items = ["MONOLITH", "DIGITAL PRODUCT STUDIO", "EST. MMXXV", "AVAILABLE FOR WORK"],
+  items = ["EREN AYDEMİR", "DESIGNER & DEVELOPER", "ISTANBUL", "AVAILABLE FOR WORK"],
   className,
   duration = 28,
   reverse = false,

@@ -20,14 +20,9 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ embed?: string }>;
-}) {
-  const { embed } = await searchParams;
+export default function Page() {
   return (
-    <DeviceShell embed={embed === "1"} background="#F3F4F6" tone="light">
+    <DeviceShell background="#F3F4F6" tone="light">
       <WalletApp />
     </DeviceShell>
   );

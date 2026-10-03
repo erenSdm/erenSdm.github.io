@@ -28,13 +28,11 @@ const UI = {
 
 export function SystemPanel({
   sys,
-  index,
   light,
   flagship,
   compact,
 }: {
   sys: SystemDef;
-  index: number;
   light: boolean;
   flagship?: boolean;
   /** one-screen layout for the horizontal desktop track */
@@ -70,25 +68,16 @@ export function SystemPanel({
       {/* header */}
       <div className={cn("grid lg:grid-cols-12 lg:gap-10", compact ? "gap-6" : "gap-8")}>
         <div className={compact ? "lg:col-span-5" : "lg:col-span-7"}>
-          <div className="ui flex flex-wrap items-center gap-3 opacity-70">
-            <span className="tabular">{c.code}</span>
-            <span aria-hidden className="h-px w-8 bg-current opacity-40" />
-            <span>{tx(c.kicker, locale)}</span>
-            {flagship && (
-              <span className="ui bg-volt px-2 py-1 text-[10px] text-carbon">{tx(UI.flagship, locale)}</span>
+          <h3
+            id={`sys-${sys.slug}-title`}
+            className={cn(
+              "font-wide text-balance",
+              compact ? "text-[clamp(1.75rem,2.5vw,2.75rem)] leading-[1.02]" : flagship ? "text-display-lg" : "text-display-md"
             )}
-          </div>
-          <div className={cn("grid items-baseline gap-x-3 md:grid-cols-[5rem_1fr]", compact ? "mt-4" : "mt-6")}>
-            {/* phones already read the index off the sticky tab switcher */}
-            <span className="font-plex tabular hidden text-xl md:block md:text-2xl">{String(index + 1).padStart(2, "0")}</span>
-            <h3
-              id={`sys-${sys.slug}-title`}
-              className={cn("font-wide text-balance", compact ? "text-[clamp(1.75rem,2.5vw,2.75rem)] leading-[1.02]" : flagship ? "text-display-lg" : "text-display-md")}
-            >
-              {tx(c.title, locale)}
-            </h3>
-          </div>
-          <ul className={cn("flex flex-wrap gap-1.5 md:ml-[calc(5rem+0.75rem)]", compact ? "mt-4" : "mt-6")}>
+          >
+            {tx(c.title, locale)}
+          </h3>
+          <ul className={cn("flex flex-wrap gap-1.5", compact ? "mt-4" : "mt-6")}>
             {c.tags.map((t) => (
               <li
                 key={t}

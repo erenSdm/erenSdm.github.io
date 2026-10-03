@@ -13,7 +13,7 @@ import { en, type Dictionary } from "./dict/en";
 import { tr } from "./dict/tr";
 
 const DICTS: Record<Locale, Dictionary> = { en, tr };
-const STORAGE_KEY = "monolith-locale";
+const STORAGE_KEY = "ea-locale";
 
 interface LanguageValue {
   locale: Locale;

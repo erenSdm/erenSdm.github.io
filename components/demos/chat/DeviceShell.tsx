@@ -22,31 +22,37 @@ const ios = Inter({
 const IOS_STACK =
   '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-ios), system-ui, sans-serif';
 
+// The site is a static export, so ?embed=1 is read in the browser. This runs
+// inline before first paint and flags the shell; the embed/standalone styling
+// below keys off [data-embed], which React never touches on hydration.
+const EMBED_SCRIPT =
+  'if(new URLSearchParams(location.search).get("embed")==="1")document.currentScript.parentElement.setAttribute("data-embed","")';
+
 export function DeviceShell({
   children,
-  embed,
   background,
   tone = "dark",
 }: {
   children: React.ReactNode;
-  embed: boolean;
   background: string;
   /** light apps sit on a soft neutral desktop backdrop instead of black */
   tone?: "light" | "dark";
 }) {
   const backdrop = tone === "light" ? "#E4E6E9" : "#000";
+  const deviceShadow =
+    tone === "light"
+      ? "0 40px 100px -30px rgba(20,24,32,0.35),0 0 0 1px rgba(20,24,32,0.06)"
+      : "0 40px 120px -30px rgba(0,0,0,0.9),0 0 0 1px rgba(255,255,255,0.08)";
   return (
     <div
-      className={cn(
-        ios.variable,
-        "ios-root flex min-h-[100dvh] w-full justify-center md:items-center",
-        embed && "is-embed",
-      )}
+      suppressHydrationWarning
+      className={cn(ios.variable, "ios-root flex min-h-[100dvh] w-full justify-center md:items-center")}
     >
+      <script dangerouslySetInnerHTML={{ __html: EMBED_SCRIPT }} />
       <style>{`
         .ios-root{--safe-top:max(env(safe-area-inset-top),12px);--safe-bottom:max(env(safe-area-inset-bottom),10px);font-family:${IOS_STACK};-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;letter-spacing:-0.01em}
-        @media (min-width:768px){.ios-root:not(.is-embed){--safe-top:22px;--safe-bottom:14px}}
-        .ios-root.is-embed{--safe-top:54px;--safe-bottom:22px}
+        @media (min-width:768px){.ios-root:not([data-embed]){--safe-top:22px;--safe-bottom:14px}.ios-root:not([data-embed]) .ios-device{height:min(932px,calc(100dvh - 48px));border-radius:44px;box-shadow:${deviceShadow}}}
+        .ios-root[data-embed]{--safe-top:54px;--safe-bottom:22px}
         .ios-root .font-mono,.ios-root .font-display,.ios-root .label{font-family:${IOS_STACK};font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
         .ios-root .font-display{font-weight:700;letter-spacing:-0.035em}
         .ios-root button,.ios-root a{touch-action:manipulation}
@@ -54,14 +60,7 @@ export function DeviceShell({
         .ios-root{background:${backdrop}}
       `}</style>
       <div
-        className={cn(
-          "relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden",
-          !embed && "md:h-[min(932px,calc(100dvh-48px))] md:rounded-[44px]",
-          !embed &&
-            (tone === "light"
-              ? "md:shadow-[0_40px_100px_-30px_rgba(20,24,32,0.35),0_0_0_1px_rgba(20,24,32,0.06)]"
-              : "md:shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.08)]"),
-        )}
+        className="ios-device relative flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden"
         style={{ background }}
       >
         {children}

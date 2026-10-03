@@ -77,22 +77,3 @@ export function SplitButton({
     </button>
   );
 }
-
-/** Small mono kicker with the volt signal dot. */
-export function Kicker({
-  children,
-  index,
-  className,
-}: {
-  children: React.ReactNode;
-  index?: string;
-  className?: string;
-}) {
-  return (
-    <div className={cn("ui flex items-center gap-3 opacity-80", className)}>
-      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-volt" />
-      {index && <span className="tabular opacity-60">{index}</span>}
-      <span>{children}</span>
-    </div>
-  );
-}

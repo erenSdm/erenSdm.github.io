@@ -3,8 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useT } from "@/lib/i18n/context";
 import { scrollToId } from "@/lib/utils";
-import { ALL_DEMOS } from "@/lib/demos";
-import { SplitButton, Kicker } from "@/components/primitives/SplitButton";
+import { SplitButton } from "@/components/primitives/SplitButton";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const SEPARATORS = ["×", "→", "*"];
@@ -38,10 +37,6 @@ export function Hero() {
       />
 
       <div className="relative flex w-full flex-1 flex-col justify-center px-4 pb-16 pt-28 md:px-10 md:pt-32 lg:pl-[3.5vw] lg:pr-[48vw] xl:pr-[50vw]">
-        <motion.div {...enter(0)}>
-          <Kicker className="mb-8 text-paper md:mb-10">{t.hero.kicker}</Kicker>
-        </motion.div>
-
         <h1
           aria-label={t.hero.title.join(" ")}
           className="relative font-wide text-[clamp(1.6rem,8.4vw,2.6rem)] md:text-[clamp(1.55rem,calc(3.6vw_+_0.3rem),4.2rem)]"
@@ -80,14 +75,10 @@ export function Hero() {
           {t.hero.body}
         </motion.p>
 
-        <motion.div {...enter(0.55)} className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 md:mt-12">
+        <motion.div {...enter(0.55)} className="mt-10 md:mt-12">
           <SplitButton tone="light" onClick={() => scrollToId("services", -56)}>
             {t.hero.cta}
           </SplitButton>
-          <span className="ui tabular flex items-center gap-2 text-paper/55">
-            <span aria-hidden className="h-1.5 w-1.5 animate-blink rounded-full bg-volt" />
-            {String(ALL_DEMOS.length).padStart(2, "0")} {t.hero.liveBuilds}
-          </span>
         </motion.div>
       </div>
 

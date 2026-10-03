@@ -1,7 +1,7 @@
 import { WEB_DEMOS, type Demo } from "@/lib/demos";
 
 /**
- * The three kinds of website the "What we build" section is organised around.
+ * The three kinds of website the "Showcase" section is organised around.
  * Every web demo in the manifest is sorted into one of them, so new entries in
  * lib/demos.ts show up under the right card without touching this file.
  * Mobile apps and backend systems have their own homepage sections.

@@ -9,7 +9,6 @@ import { useWheelScroll } from "@/lib/useWheelScroll";
 import { useMedia } from "@/lib/useMedia";
 import { PhoneFrame } from "@/components/primitives/PhoneFrame";
 import { LivePreview } from "@/components/showcase/LivePreview";
-import { Kicker } from "@/components/primitives/SplitButton";
 import { ChipOverlay, PHONE_DEPTH, PhoneBack, PhoneEdge, chipOutro } from "@/components/transition/ChipTransition";
 import { cn } from "@/lib/utils";
 
@@ -32,9 +31,8 @@ export function MobileShowcase() {
     <section id="mobile" data-prism="mobile" className="relative text-paper">
       {/* header */}
       <div className="mx-auto max-w-[1680px] px-4 pt-6 md:px-10 md:pt-8 lg:px-[8.5vw]">
-        <Kicker className="mb-6">{t.mobile.label}</Kicker>
         {/* from md up sized so "Mobil uygulamalar" stays on one line; phones let it wrap at section-title scale */}
-        <h2 className="font-wide text-[clamp(1.75rem,8.4vw,2.6rem)] md:whitespace-nowrap md:text-[clamp(1.35rem,5.4vw,5.6rem)]">{t.mobile.title}</h2>
+        <h2 className="font-wide text-center text-[clamp(1.75rem,8.4vw,2.6rem)] md:whitespace-nowrap md:text-[clamp(1.35rem,5.4vw,5.6rem)]">{t.mobile.title}</h2>
       </div>
 
       {stacked ? (
@@ -62,7 +60,7 @@ export function MobileShowcase() {
                     i === active ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                 >
-                  <Copy demo={demo} i={i} locale={locale} label={t.mobile.open} compact />
+                  <Copy demo={demo} locale={locale} label={t.mobile.open} compact />
                 </div>
               ))}
             </div>
@@ -152,13 +150,11 @@ function Phone({ demo }: { demo: MobileDemo }) {
 
 function Copy({
   demo,
-  i,
   locale,
   label,
   compact,
 }: {
   demo: MobileDemo;
-  i: number;
   locale: "en" | "tr";
   label: string;
   compact?: boolean;
@@ -183,7 +179,7 @@ function Copy({
       >
         {demo.blurb[locale]}
       </p>
-      <div className={cn("flex items-center gap-5", compact ? "mt-5" : "mt-8")}>
+      <div className={compact ? "mt-5" : "mt-8"}>
         <Link
           href={demo.route}
           className="group inline-flex items-stretch gap-1 outline-none focus-visible:ring-2 focus-visible:ring-volt"
@@ -198,9 +194,6 @@ function Copy({
             />
           </span>
         </Link>
-        <span className="ui tabular text-paper/45">
-          {String(i + 1).padStart(2, "0")} / {String(MOBILE_DEMOS.length).padStart(2, "0")}
-        </span>
       </div>
     </div>
   );
@@ -297,7 +290,7 @@ function SwipeDeck({ locale, label }: { locale: "en" | "tr"; label: string }) {
               i === active ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
             )}
           >
-            <Copy demo={demo} i={i} locale={locale} label={label} compact />
+            <Copy demo={demo} locale={locale} label={label} compact />
           </div>
         ))}
       </div>

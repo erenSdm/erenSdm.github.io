@@ -22,14 +22,9 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ embed?: string }>;
-}) {
-  const { embed } = await searchParams;
+export default function Page() {
   return (
-    <DeviceShell embed={embed === "1"} background="#F3F5F8" tone="light">
+    <DeviceShell background="#F3F5F8" tone="light">
       <div className={`${relaySans.className} h-full`}>
         <RelayApp />
       </div>

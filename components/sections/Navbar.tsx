@@ -76,15 +76,14 @@ export function Navbar() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 bg-carbon/72 text-paper backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1680px] items-center justify-between gap-4 px-4 md:px-6">
+        <div className="flex h-14 items-center justify-between gap-4 px-4 md:px-6">
           <button
             type="button"
             onClick={() => go("top")}
             className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-volt"
-            aria-label="MONOLITH"
+            aria-label="Eren Aydemir"
           >
-            <span className="font-wide text-[15px] tracking-[-0.02em]">MONOLITH</span>
-            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-volt" />
+            <span className="font-wide text-[15px] tracking-[-0.02em]">EREN AYDEMİR</span>
           </button>
 
           <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
@@ -101,7 +100,6 @@ export function Navbar() {
                     : "text-paper/75 hover:bg-paper/10 hover:text-paper"
                 )}
               >
-                <span className="tabular opacity-60">{String(i + 1).padStart(2, "0")}</span>
                 {item.label}
               </button>
             ))}
@@ -118,9 +116,6 @@ export function Navbar() {
               aria-controls="mobile-menu"
               className="ui flex h-9 items-center gap-2 rounded-full bg-paper px-4 text-carbon"
             >
-              <span className="tabular opacity-60">
-                {open ? "×" : String(items.length).padStart(2, "0")}
-              </span>
               {open ? t.nav.close : t.nav.menu}
             </button>
           </div>
@@ -153,9 +148,6 @@ export function Navbar() {
                   transition={{ delay: 0.06 + i * 0.05, duration: 0.6, ease }}
                   className="flex items-baseline gap-4 border-b border-dashed border-paper/25 py-5 text-left"
                 >
-                  <span className="ui tabular w-6 text-paper/50">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
                   <span
                     className={cn(
                       "font-wide text-[clamp(1.6rem,8vw,2.6rem)]",

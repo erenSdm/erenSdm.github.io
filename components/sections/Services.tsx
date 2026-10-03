@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import type { Demo } from "@/lib/demos";
 import { FEATURED_WEB } from "@/lib/featured";
 import { LivePreview } from "@/components/showcase/LivePreview";
-import { SplitButton, Kicker } from "@/components/primitives/SplitButton";
+import { SplitButton } from "@/components/primitives/SplitButton";
 import { useMedia } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
 
@@ -29,26 +29,20 @@ export function Services() {
 
   return (
     <section id="services" data-prism="services" className="relative text-paper">
-      <div className="mx-auto max-w-[1680px] px-4 pb-14 pt-24 md:px-10 md:pb-20 md:pt-36 lg:px-[8.5vw]">
-        <Kicker className="mb-8">{t.services.kicker}</Kicker>
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <h2 className="font-wide text-display-xl">{t.services.title}</h2>
-          <p className="font-plex max-w-[40ch] text-[15px] leading-[1.7] text-paper/70">
-            {t.services.sub}
-          </p>
-        </div>
+      <div className="mx-auto max-w-[1680px] px-4 pb-10 pt-14 md:px-10 md:pb-12 md:pt-20 lg:px-[8.5vw]">
+        <h2 className="font-wide text-display-xl whitespace-nowrap">{t.services.title}</h2>
       </div>
 
       <div className="flex w-full flex-col gap-6 px-2 pb-24 md:px-3 lg:gap-0 lg:pb-[8vh]">
         {FEATURED_WEB.map((demo, i) => (
-          <SiteCard key={demo.slug} demo={demo} i={i} total={FEATURED_WEB.length} />
+          <SiteCard key={demo.slug} demo={demo} i={i} />
         ))}
       </div>
     </section>
   );
 }
 
-function SiteCard({ demo, i, total }: { demo: Demo; i: number; total: number }) {
+function SiteCard({ demo, i }: { demo: Demo; i: number }) {
   const { t, locale } = useLanguage();
   const light = i % 2 === 1;
 
@@ -72,16 +66,11 @@ function SiteCard({ demo, i, total }: { demo: Demo; i: number; total: number }) 
             preview sits between the name and the pitch: phones see the work first */}
         <div className="contents lg:col-span-4 lg:flex lg:flex-col lg:self-stretch">
           <div className="order-1 lg:order-none">
-            <div className="grid grid-cols-[2.75rem_1fr] items-baseline gap-x-3 md:grid-cols-[5rem_1fr]">
-              <span className="font-plex tabular text-lg md:text-2xl">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <h3 id={`site-${demo.slug}`} className="font-wide text-display-md text-balance">
-                {demo.brand}
-              </h3>
-            </div>
+            <h3 id={`site-${demo.slug}`} className="font-wide text-display-md text-balance">
+              {demo.brand}
+            </h3>
 
-            <ul className="mt-4 flex flex-wrap gap-1.5 md:ml-[calc(5rem+0.75rem)] md:mt-6">
+            <ul className="mt-4 flex flex-wrap gap-1.5 md:mt-6">
               {[demo.domain[locale], ...demo.stack.filter((s) => s !== demo.domain.en)].map((tag, k) => (
                 <li
                   key={tag}
@@ -98,7 +87,7 @@ function SiteCard({ demo, i, total }: { demo: Demo; i: number; total: number }) 
             </ul>
           </div>
 
-          <div className="order-3 flex flex-1 flex-col justify-end md:ml-[calc(5rem+0.75rem)] lg:order-none lg:mt-10">
+          <div className="order-3 flex flex-1 flex-col justify-end lg:order-none lg:mt-10">
             <p className="font-wide max-w-[30ch] text-lg leading-[1.3] tracking-[-0.01em] text-balance">
               {demo.tagline[locale]}
             </p>
@@ -111,13 +100,10 @@ function SiteCard({ demo, i, total }: { demo: Demo; i: number; total: number }) 
               {demo.blurb[locale]}
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8">
               <SplitButton tone={light ? "dark" : "light"} href={demo.url ?? demo.route} external={!!demo.url}>
                 {t.services.open} {demo.brand}
               </SplitButton>
-              <span className="ui tabular opacity-55">
-                {String(i + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-              </span>
             </div>
           </div>
         </div>

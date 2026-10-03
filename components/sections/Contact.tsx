@@ -3,7 +3,7 @@
 import { ArrowUp } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { scrollToId } from "@/lib/utils";
-import { SplitButton, Kicker } from "@/components/primitives/SplitButton";
+import { SplitButton } from "@/components/primitives/SplitButton";
 
 const EMAIL = "errenaydemir@gmail.com";
 
@@ -13,7 +13,6 @@ export function Contact() {
   return (
     <footer id="contact" data-prism="contact" className="relative text-paper">
       <div className="mx-auto max-w-[1680px] px-4 pb-16 pt-28 md:px-10 md:pt-40 lg:px-[8.5vw]">
-        <Kicker className="mb-8">{t.contact.kicker}</Kicker>
 
         <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
           <h2 className="font-wide text-[clamp(2.2rem,6.2vw,6.6rem)] lg:col-span-8">
@@ -74,14 +73,14 @@ export function Contact() {
       {/* giant wordmark */}
       <div className="overflow-hidden px-3 md:px-6" aria-hidden>
         <div className="font-wide text-wordmark whitespace-nowrap text-center leading-[0.8] tracking-[-0.06em] text-paper/[0.92]">
-          MONOLITH<span className="text-volt">.</span>
+          EREN AYDEMİR<span className="text-volt">.</span>
         </div>
       </div>
 
       <div className="rule-dashed mt-8 text-paper" aria-hidden />
       <div className="mx-auto flex max-w-[1680px] flex-col gap-5 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-10">
         <span className="ui text-paper/55">
-          © 2026 MONOLITH — {t.footer.tag}
+          © 2026 Eren Aydemir — {t.footer.tag}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           <button

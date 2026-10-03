@@ -224,7 +224,7 @@ export function PhoneBack({ className }: { className?: string }) {
             BACK END
           </text>
           <text x="56" y="676" fill="#f4f4ef" fillOpacity="0.4" fontSize="10" fontFamily={mono} letterSpacing="1.5">
-            REV.04 · MONOLITH SILICON
+            REV.04 · EA SILICON
           </text>
           <rect x="56" y="694" width="44" height="6" fill={VOLT} />
         </svg>

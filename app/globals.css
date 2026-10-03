@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   MONOLITH — design tokens
+   Eren Aydemir — design tokens
    Tactical-telemetry dark substrate + neobrutalist accent.
    ============================================================ */
 
@@ -270,12 +270,12 @@ html.lenis body {
     font-size: clamp(1.4rem, 2.8vw, 2.6rem);
   }
   .text-wordmark {
-    font-size: clamp(2.6rem, 14.6vw, 16.5rem);
+    font-size: clamp(1.8rem, 10vw, 11.5rem);
   }
-  /* phones: the wide face plus the volt dot need a touch less than 14.6vw to clear the gutters */
+  /* phones: the wide face plus the volt dot need a touch less than 10vw to clear the gutters */
   @media (max-width: 767px) {
     .text-wordmark {
-      font-size: 13.4vw;
+      font-size: 9.2vw;
     }
   }
   /* dashed hairlines */

@@ -2,9 +2,9 @@ import type { Dictionary } from "./en";
 
 export const tr: Dictionary = {
   meta: {
-    title: "MONOLITH — Dijital Ürün Stüdyosu | Web & Uygulama Tasarımı",
+    title: "Eren Aydemir — Tasarımcı ve Full-Stack Geliştirici",
     description:
-      "MONOLITH, İstanbul merkezli bir dijital ürün stüdyosu. Web siteleri, mobil uygulamalar ve backend otomasyonları — hepsi tıklayıp içine girebileceğin canlı projeler.",
+      "Eren Aydemir, İstanbul'da yaşayan bir tasarımcı ve full-stack geliştirici. Web siteleri, mobil uygulamalar ve backend otomasyonları — hepsi tıklayıp içine girebileceğin canlı projeler.",
   },
   nav: {
     items: [
@@ -20,12 +20,10 @@ export const tr: Dictionary = {
     lang: "Dili değiştir",
   },
   hero: {
-    kicker: "Dijital ürün stüdyosu — İstanbul",
     title: ["Akılda", "kalmak için", "tasarlandı."],
-    body: "Web siteleri, mobil uygulamalar ve onları ayakta tutan sistemler — küçük bir stüdyo tarafından uçtan uca tasarlanır ve geliştirilir. Strateji, arayüz, kod ve hareket; aradaki kopukluklar olmadan.",
+    body: "Web sitelerini, mobil uygulamaları ve onları ayakta tutan sistemleri uçtan uca tasarlıyor ve geliştiriyorum.",
     cta: "İşleri gör",
     secondary: "Hizmetler",
-    liveBuilds: "canlı proje",
     ticker: [
       "Web platformları",
       "Dashboard'lar",
@@ -38,15 +36,30 @@ export const tr: Dictionary = {
     ],
   },
   intro: {
-    kicker: "Stüdyo",
-    title: ["Tek stüdyo.", "Bütün katmanlar."],
-    lead: "MONOLITH full-stack çalışan bir stüdyo: ekranı tasarlayan, arayüzü kodlayan ve arkasındaki sistemi kuran aynı eller.",
-    body: "Bir ürün genelde |tasarım|, |frontend| ve |backend| arasında üç kez el değiştirir ve her devirde bir şeyler kaybolur. Burada her katman aynı masada yapılıyor. Bu yüzden ekranda gördüğün hareketle arkada akan veri aynı dili konuşuyor.",
+    kicker: "Hakkımda",
+    title: ["Merhaba,", "ben Eren."],
+    lead: "Geniş çalışma alanlarımla size her aşamada yardımcı olabilirim. Fikirlerinizi birlikte, gerçekten çalışan sistemlere çevirelim.",
+    points: [
+      {
+        title: "Tasarım yaklaşımı",
+        body: "Şablondan değil, işin kendisinden yola çıkarım. Tipografi, hareket ve detaylarla akılda kalan ama kullanırken yormayan arayüzler tasarlarım.",
+      },
+      {
+        title: "Uçtan uca geliştirme",
+        body: "Arayüz, API, veritabanı ve yayına alma: her katmanı kendim kurarım. İş el değiştirmediği için arada hiçbir şey kaybolmaz.",
+      },
+      {
+        title: "AI ve otomasyon",
+        body: "Tekrar eden işleri otomasyona, dağınık bilgiyi yapay zekâ destekli araçlara çeviririm: botlar, entegrasyonlar ve size zaman kazandıran akışlar.",
+      },
+    ],
+    figure: {
+      alt: "Eren Aydemir'in siyah beyaz portresi",
+    },
     parts: [
       {
         target: "services",
         title: "Web siteleri",
-        sub: "Platformlar, mağazalar, marka sayfaları",
         body: "Bakış açısı olan landing sayfaları, e-ticaret vitrinleri, SaaS panelleri ve gerçek zamanlı 3D sahneler. Next.js ve React ile hızlı, erişilebilir ve akılda kalan arayüzler.",
         tags: ["Next.js", "React", "Three.js", "GSAP"],
         cta: "Web sitelerini gör",
@@ -54,7 +67,6 @@ export const tr: Dictionary = {
       {
         target: "mobile",
         title: "Mobil uygulamalar",
-        sub: "iOS ve Android arayüzleri",
         body: "Başparmak için tasarlanmış uygulama ekranları: yerel hissettiren geçişler, bir bakışta okunan veriler ve kayıttan ödemeye kadar uçtan uca çalışan akışlar.",
         tags: ["iOS", "Android", "Etkileşim", "Prototip"],
         cta: "Uygulamaları gör",
@@ -62,7 +74,6 @@ export const tr: Dictionary = {
       {
         target: "systems",
         title: "Backend ve otomasyon",
-        sub: "API'ler, botlar, yapay zekâ",
         body: "Ekranın arkasındaki kısım: API'ler ve veritabanları, borsa ve ödeme entegrasyonları, Telegram ve WhatsApp botları, yapay zekâ destekli arama ve tekrar eden işi insanların elinden alan otomasyonlar.",
         tags: ["API", "Webhook", "AI / RAG", "Bot"],
         cta: "Sistemleri gör",
@@ -71,8 +82,7 @@ export const tr: Dictionary = {
   },
   services: {
     kicker: "Web siteleri",
-    title: "Ne inşa ediyoruz",
-    sub: "Web projelerimizden bir seçki: yayındaki müşteri sitelerinden stüdyo konseptlerine. Aşağıdaki her pencere ekran görüntüsü değil, çalışan gerçek site. Kaydırarak gez ya da birini tam ekran aç.",
+    title: "Vitrin",
     live: "Canlı",
     open: "Aç",
   },
@@ -86,22 +96,18 @@ export const tr: Dictionary = {
     title: "İş nasıl ilerliyor",
     steps: [
       {
-        n: "01",
         title: "Sinyal",
-        body: "Brief'ten ve konunun gerçek dünyasından başlarız — malzemeleri, dili, gördüğü iş.",
+        body: "Brief'ten ve konunun gerçek dünyasından başlarım — malzemeleri, dili, gördüğü iş.",
       },
       {
-        n: "02",
         title: "Plan",
         body: "Token'lar, tip ölçeği ve bir imza hamle. İşin hatırlanacağı o tek şey.",
       },
       {
-        n: "03",
         title: "İnşa",
-        body: "Gerçek bileşenler, gerçek hareket, gerçek içerik. İlerledikçe eleştirir, işe yaramayanı keseriz.",
+        body: "Gerçek bileşenler, gerçek hareket, gerçek içerik. İlerledikçe eleştirir, işe yaramayanı keserim.",
       },
       {
-        n: "04",
         title: "Teslim",
         body: "Mobile duyarlı, varsayılan olarak erişilebilir, yük altında hızlı. Temiz şekilde teslim edilir.",
       },
@@ -110,16 +116,16 @@ export const tr: Dictionary = {
   contact: {
     kicker: "İletişim",
     title: ["Keskin bir şey", "birlikte", "inşa edelim."],
-    body: "Şablondan daha iyisini hak eden bir ürünün mü var? Ne yaptığını ve kimin için olduğunu anlat — bir iş günü içinde dönüyoruz.",
+    body: "Şablondan daha iyisini hak eden bir ürünün mü var? Ne yaptığını ve kimin için olduğunu anlat — bir iş günü içinde dönüyorum.",
     cta: "Proje başlat",
     availabilityLabel: "Müsaitlik",
     availability: "Q4 2026 — Q1 2027 için rezervasyon açık",
     emailLabel: "Doğrudan",
-    locationLabel: "Stüdyo",
+    locationLabel: "Konum",
     location: "İstanbul, TR — dünya çapında uzaktan",
   },
   footer: {
-    tag: "Dijital ürün stüdyosu",
+    tag: "Tasarımcı ve full-stack geliştirici",
     backToTop: "Başa dön",
     colophon: "Next.js, GSAP ve fazlaca kahveyle yapıldı.",
   },

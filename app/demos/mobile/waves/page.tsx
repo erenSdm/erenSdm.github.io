@@ -21,14 +21,9 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ embed?: string }>;
-}) {
-  const { embed } = await searchParams;
+export default function Page() {
   return (
-    <DeviceShell embed={embed === "1"} background="#131211">
+    <DeviceShell background="#131211">
       <WavesApp />
     </DeviceShell>
   );

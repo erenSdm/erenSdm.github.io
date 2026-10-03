@@ -21,10 +21,9 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ embed?: string }> }) {
-  const { embed } = await searchParams;
+export default function Page() {
   return (
-    <DeviceShell embed={embed === "1"} background="#F4F5F7" tone="light">
+    <DeviceShell background="#F4F5F7" tone="light">
       <PulseApp />
     </DeviceShell>
   );

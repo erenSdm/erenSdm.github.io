@@ -3,7 +3,6 @@
 import { useCallback, useRef, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
-import { Kicker } from "@/components/primitives/SplitButton";
 import { SystemPanel } from "@/components/systems/SystemPanel";
 import { TraceBridge } from "@/components/transition/ChipTransition";
 import { tx } from "@/components/systems/types";
@@ -18,7 +17,6 @@ import { scrollToId, cn } from "@/lib/utils";
 const SYSTEMS = [richcasebot, rag, integrations, automation];
 
 const COPY = {
-  kicker: { en: "Backend & systems", tr: "Backend ve sistemler" },
   title: { en: "Under the hood", tr: "Perde arkası" },
   sub: {
     en: "Screens are only the part you see. Keep scrolling and each system slides past at work: the live traffic running through it, and one real request followed end to end, with the data it carries at every step and the milliseconds each step takes.",
@@ -29,7 +27,7 @@ const COPY = {
   done: { en: "On to the process", tr: "Sürece geç" },
   legend: [
     { k: "packet", en: "Live traffic", tr: "Canlı trafik" },
-    { k: "token", en: "The request we follow", tr: "Takip edilen istek" },
+    { k: "token", en: "The request being traced", tr: "Takip edilen istek" },
     { k: "ai", en: "AI step", tr: "Yapay zekâ adımı" },
     { k: "err", en: "Blocked / dropped", tr: "Durduruldu / düştü" },
   ],
@@ -70,7 +68,6 @@ export function Systems() {
       {/* picks up the bus line the mobile outro leaves running off screen */}
       <TraceBridge />
       <div className="mx-auto max-w-[1680px] px-4 pb-14 pt-24 md:px-10 md:pb-20 md:pt-36 lg:px-[8.5vw]">
-        <Kicker className="mb-8">{tx(COPY.kicker, locale)}</Kicker>
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <h2 id="systems-title" className="font-wide text-display-xl">
             {tx(COPY.title, locale)}
@@ -88,9 +85,8 @@ export function Systems() {
                   type="button"
                   onClick={() => go(s.slug)}
                   aria-current={active === i ? "true" : undefined}
-                  className="group flex w-full items-baseline gap-3 border-b border-dashed border-paper/15 py-3 text-left outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-volt sm:pr-4 lg:border-b-0"
+                  className="group flex w-full border-b border-dashed border-paper/15 py-3 text-left outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-volt sm:pr-4 lg:border-b-0"
                 >
-                  <span className="ui tabular text-paper/45">{String(i + 1).padStart(2, "0")}</span>
                   <span
                     className={cn(
                       "font-plex text-[13px] leading-snug transition-colors group-hover:text-volt",
@@ -120,7 +116,7 @@ export function Systems() {
           <div ref={track} className="flex h-full w-max gap-4 px-[4vw] pb-8 pt-[72px]">
             {SYSTEMS.map((s, i) => (
               <div key={s.slug} className="h-full w-[min(92vw,1560px)] shrink-0">
-                <SystemPanel sys={s} index={i} light={i % 2 === 1} flagship={i === 0} compact />
+                <SystemPanel sys={s} light={i % 2 === 1} flagship={i === 0} compact />
               </div>
             ))}
           </div>
@@ -142,12 +138,10 @@ export function Systems() {
                   id={`sys-tab-${s.slug}`}
                   aria-selected={active === i}
                   aria-controls="sys-tabpanel"
+                  aria-label={tx(s.copy.title, locale)}
                   onClick={() => go(s.slug)}
-                  className="flex flex-col justify-end gap-2 pt-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-volt min-h-11"
+                  className="flex flex-col justify-end pt-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-volt min-h-11"
                 >
-                  <span className={cn("ui tabular text-[11px] transition-colors", active === i ? "text-volt" : "text-paper/45")}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
                   <span className={cn("h-[3px] w-full transition-colors duration-500", i <= active ? "bg-volt" : "bg-paper/15")} />
                 </button>
               ))}
@@ -159,7 +153,6 @@ export function Systems() {
             <SystemPanel
               key={SYSTEMS[active].slug}
               sys={SYSTEMS[active]}
-              index={active}
               light={active % 2 === 1}
               flagship={active === 0}
             />
@@ -183,7 +176,7 @@ export function Systems() {
               >
                 <span className="flex flex-col gap-1.5">
                   <span className="ui text-[10px] opacity-55">
-                    {tx(COPY.next, locale)} · {String(active + 2).padStart(2, "0")}
+                    {tx(COPY.next, locale)}
                   </span>
                   <span className="font-plex truncate text-[13px]">{tx(SYSTEMS[active + 1].copy.title, locale)}</span>
                 </span>
